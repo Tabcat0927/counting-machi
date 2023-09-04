@@ -206,7 +206,7 @@ void MainWidget::RunControlWidget()
     shaker3Dec = new QPushButton(QStringLiteral("3级振动盘--"));
     shaker3Dec->setStyleSheet(_shakerQSS);
     ctrlStart = new QPushButton(QStringLiteral("启动"));
-    ctrlStart->setStyleSheet("QPushButton#ctrlStart { "
+    ctrlStart->setStyleSheet("QPushButton#ctrlStart{ "
                              "min-width: 150px;"
                              "min-height: 80px;"
                              "background: rgb(85, 255, 0);"
