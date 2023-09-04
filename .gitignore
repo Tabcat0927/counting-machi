@@ -1,0 +1,12 @@
+#ignore all temp files
+temp/*
+
+#ignore user config
+source/*.pro.user
+source/*.pro.user.*
+
+source/.qmake.stash
+source/debug
+source/release
+source/*.autosave
+source/Makefile*
