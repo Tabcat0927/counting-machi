@@ -16,6 +16,7 @@
 #include <QProgressBar>
 
 #include "visiongraph.h"
+#include "digitunitframe.h"
 
 class MainWidget : public QWidget
 {
@@ -32,21 +33,17 @@ public:
     VisionGraph *vgShowImage;
     QLabel *companyName;
     QLabel *curQtyText;
-    QLabel *curQtyVal;
-    QLabel *curQtyUnit;
+    DigitUnitFrame *curQtyFrame;
     QLabel *aBtlQtyText;
-    QLabel *aBtlQtyVal;
-    QLabel *aBtlQtyUnit;
+    DigitUnitFrame *aBtlQtyFrame;
     QLabel *cntSpdText;
-    QLabel *cntSpdVal;
-    QLabel *cntSpdUnit;
+    DigitUnitFrame *cntSpdFrame;
     QLabel *fillSpdText;
-    QLabel *fillSpdVal;
-    QLabel *fillSpdUnit;
+    DigitUnitFrame *fillSpdFrame;
     QLabel *fillQtyText;
-    QLabel *fillQtyVal;
-    QLabel *fillQtyUnit;
+    DigitUnitFrame *fillQtyFrame;
     QPushButton *clrBtn1;
+    QPushButton *clrBtn2;
     QLabel *haveBtlText;
     QLabel *exsWarnText;
 
@@ -62,9 +59,9 @@ public:
     QPushButton *ctrlStudy;
     QPushButton *ctrlSave;
     QPushButton *ctrlBelt;
-    QLabel *shaker1Val;
-    QLabel *shaker2Val;
-    QLabel *shaker3Val;
+    DigitUnitFrame *shaker1Val;
+    DigitUnitFrame *shaker2Val;
+    DigitUnitFrame *shaker3Val;
 
 
 private:
@@ -74,6 +71,8 @@ private:
     QGroupBox     *_statusWidget;
     QGroupBox     *_controlWidget;
 
+private:
+    void SetStyleSheet();
 
 signals:
 

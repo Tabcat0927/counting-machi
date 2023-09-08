@@ -16,6 +16,8 @@
 #include <QFormLayout>
 #include <QGroupBox>
 
+#include "digitunitframe.h"
+
 class SetupWidget : public QWidget
 {
     Q_OBJECT
@@ -35,35 +37,35 @@ public:
     QPushButton *btnDelete;
     //identify parameter
     QLabel *thresholdLabel;
-    QLineEdit *thresholdVal1;
+    DigitUnitFrame *thresholdVal1;
     QLabel *signTo;
-    QLineEdit *thresholdVal2;
+    DigitUnitFrame *thresholdVal2;
     QLabel *preprocLabel;
     QComboBox *preprocType;
     QLabel *operatorSize;
-    QLineEdit *operatorSizeVal;
+    DigitUnitFrame *operatorSizeVal;
     QLabel *areaSetLabel;
-    QLineEdit *areaSetVal1;
+    DigitUnitFrame *areaSetVal1;
     QLabel *signTo1;
-    QLineEdit *areaSetVal2;
+    DigitUnitFrame *areaSetVal2;
     QLabel *radSetLabel;
-    QLineEdit *radSetVal1;
+    DigitUnitFrame *radSetVal1;
     QLabel *signTo2;
-    QLineEdit *radSetVal2;
+    DigitUnitFrame *radSetVal2;
     QLabel *fillSetLabel;
-    QLineEdit *fillSetVal1;
+    DigitUnitFrame *fillSetVal1;
     QLabel *signTo3;
-    QLineEdit *fillSetVal2;
+    DigitUnitFrame *fillSetVal2;
     QLabel *brokenAreaSetLabel;
-    QLineEdit *brokenAreaSetVal1;
+    DigitUnitFrame *brokenAreaSetVal1;
     QLabel *signTo4;
-    QLineEdit *brokenAreaSetVal2;
+    DigitUnitFrame *brokenAreaSetVal2;
     QLabel *brokenRadSetLabel;
-    QLineEdit *brokenRadSetVal1;
+    DigitUnitFrame *brokenRadSetVal1;
     QLabel *signTo5;
-    QLineEdit *brokenRadSetVal2;
+    DigitUnitFrame *brokenRadSetVal2;
     QLabel *remnentAlertLabel;
-    QLineEdit *remnentAlertVal;
+    DigitUnitFrame *remnentAlertVal;
     //camera parameter
     QLabel *lineFreqLabel;
     QSpinBox *lineFreqVal;
@@ -108,35 +110,35 @@ public:
     QPushButton *mcPlug8;
     //electric parameter
     QLabel *epCutTime;
-    QLineEdit *epCutTimeVal;
+    DigitUnitFrame *epCutTimeVal;
     QLabel *epDropDelay;
-    QLineEdit *epDropDelayVal;
+    DigitUnitFrame *epDropDelayVal;
     QLabel *epFillTime;
-    QLineEdit *epFillTimeVal;
+    DigitUnitFrame *epFillTimeVal;
     QLabel *epChangeTime;
-    QLineEdit *epChangeTimeVal;
+    DigitUnitFrame *epChangeTimeVal;
     QLabel *epFlawKickTime;
-    QLineEdit *epFlawKickTimeVal;
+    DigitUnitFrame *epFlawKickTimeVal;
     QLabel *epFlawKickDelay;
-    QLineEdit *epFlawKickDelayVal;
+    DigitUnitFrame *epFlawKickDelayVal;
     QLabel *epShakeTime;
-    QLineEdit *epShakeTimeVal;
+    DigitUnitFrame *epShakeTimeVal;
     QLabel *epBlock2Time;
-    QLineEdit *epBlock2TimeVal;
+    DigitUnitFrame *epBlock2TimeVal;
     QLabel *epShaker1Volt;
-    QLineEdit *epShaker1VoltVal;
+    DigitUnitFrame *epShaker1VoltVal;
     QLabel *epShaker1Freq;
-    QLineEdit *epShaker1FreqVal;
+    DigitUnitFrame *epShaker1FreqVal;
     QLabel *epShaker2Volt;
-    QLineEdit *epShaker2VoltVal;
+    DigitUnitFrame *epShaker2VoltVal;
     QLabel *epShaker2Freq;
-    QLineEdit *epShaker2FreqVal;
+    DigitUnitFrame *epShaker2FreqVal;
     QLabel *epShaker3Volt;
-    QLineEdit *epShaker3VoltVal;
+    DigitUnitFrame *epShaker3VoltVal;
     QLabel *epShaker3Freq;
-    QLineEdit *epShaker3FreqVal;
+    DigitUnitFrame *epShaker3FreqVal;
     QLabel *epShakerRadio;
-    QLineEdit *epShakerRadioVal;
+    DigitUnitFrame *epShakerRadioVal;
     QPushButton *motorUp;
     QPushButton *unLoadCylinder;
     QPushButton *motorDown;

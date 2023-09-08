@@ -3,16 +3,13 @@
 MainWidget::MainWidget(QWidget *parent) : QWidget(parent)
 {
     _fontYahei15 = QFont(QStringLiteral("微软雅黑"), 15);
-    _shakerQSS = "min-width: 150px; \
-                min-height: 40px; \
-                background: rgb(85, 0, 255); \
-                border-radius: 4px; \
-                font: 14pt '微软雅黑'; \
-                color:rgb(255, 255, 255);";
+
     vgShowImage = new VisionGraph();
     vgShowImage->setBkImg(QImage(":/icon/ico/JianfengLogo.png"));
+    vgShowImage->setGraphType(GraphType::graph_Info,item_NO);
 
     CreateUi();
+    SetStyleSheet();
 }
 
 void MainWidget::CreateUi()
@@ -56,88 +53,46 @@ void MainWidget::RunStatusWidget()
     //当前数量current quantity
     curQtyText = new QLabel(QStringLiteral("当前数量"));
     curQtyText->setFont(_fontYahei15);
-    curQtyVal = new QLabel();
-    curQtyUnit = new QLabel(QStringLiteral("粒"));
-    curQtyUnit->setFont(_fontYahei15);
-    QFrame *curQtyFrame = new QFrame();
-    curQtyFrame->setFrameStyle(QFrame::Plain | QFrame::StyledPanel);
-    QHBoxLayout *curQtyLayout = new QHBoxLayout();
-    curQtyLayout->addWidget(curQtyVal);
-    curQtyLayout->addWidget(curQtyUnit);
-    curQtyLayout->setStretch(0, 1);
-    curQtyFrame->setLayout(curQtyLayout);
+    curQtyFrame = new DigitUnitFrame(QStringLiteral("粒"), true);
+    curQtyFrame->setFont(_fontYahei15);
+    curQtyFrame->setHeight(45);
 
     //单瓶数量single bottle quantity
     aBtlQtyText = new QLabel(QStringLiteral("单瓶数量"));
     aBtlQtyText->setFont(_fontYahei15);
-    aBtlQtyVal = new QLabel();
-    aBtlQtyUnit = new QLabel(QStringLiteral("粒/瓶"));
-    aBtlQtyUnit->setFont(_fontYahei15);
-    QFrame *aBtlQtyFrame = new QFrame();
-    aBtlQtyFrame->setFixedHeight(50);
-    aBtlQtyFrame->setFrameStyle(QFrame::Plain | QFrame::StyledPanel);
-    QHBoxLayout *aBtlQtyLayout = new QHBoxLayout();
-    aBtlQtyLayout->addWidget(aBtlQtyVal);
-    aBtlQtyLayout->addWidget(aBtlQtyUnit);
-    aBtlQtyLayout->setStretch(0, 1);
-    aBtlQtyFrame->setLayout(aBtlQtyLayout);
+    aBtlQtyFrame = new DigitUnitFrame(QStringLiteral("粒/瓶"), false);
+    aBtlQtyFrame->setFont(_fontYahei15);
+    aBtlQtyFrame->setHeight(45);
 
     //计数速度
     cntSpdText = new QLabel(QStringLiteral("计数速度"));
     cntSpdText->setFont(_fontYahei15);
-    cntSpdVal = new QLabel();
-    cntSpdUnit = new QLabel(QStringLiteral("粒/秒"));
-    cntSpdUnit->setFont(_fontYahei15);
-    QFrame *cntSpdFrame = new QFrame();
-    cntSpdFrame->setFixedHeight(50);
-    cntSpdFrame->setFrameStyle(QFrame::Plain | QFrame::StyledPanel);
-    QHBoxLayout *cntSpdLayout = new QHBoxLayout();
-    cntSpdLayout->addWidget(cntSpdVal);
-    cntSpdLayout->addWidget(cntSpdUnit);
-    cntSpdLayout->setStretch(0, 1);
-    cntSpdFrame->setLayout(cntSpdLayout);
+    cntSpdFrame = new DigitUnitFrame(QStringLiteral("粒/秒"), true);
+    cntSpdFrame->setFont(_fontYahei15);
+    cntSpdFrame->setHeight(45);
 
     //装瓶速度
     fillSpdText = new QLabel(QStringLiteral("装瓶速度"));
     fillSpdText->setFont(_fontYahei15);
-    fillSpdVal = new QLabel();
-    fillSpdUnit = new QLabel(QStringLiteral("瓶/分"));
-    fillSpdUnit->setFont(_fontYahei15);
-    QFrame *fillSpdFrame = new QFrame();
-    fillSpdFrame->setFixedHeight(50);
-    fillSpdFrame->setFrameStyle(QFrame::Plain | QFrame::StyledPanel);
-    QHBoxLayout *fillSpdLayout = new QHBoxLayout();
-    fillSpdLayout->addWidget(fillSpdVal);
-    fillSpdLayout->addWidget(fillSpdUnit);
-    fillSpdLayout->setStretch(0, 1);
-    fillSpdFrame->setLayout(fillSpdLayout);
+    fillSpdFrame = new DigitUnitFrame(QStringLiteral("瓶/分"), true);
+    fillSpdFrame->setFont(_fontYahei15);
+    fillSpdFrame->setHeight(45);
 
     //已装瓶数量
     fillQtyText = new QLabel(QStringLiteral("已装瓶数量"));
     fillQtyText->setFont(_fontYahei15);
-    fillQtyVal = new QLabel();
-    fillQtyUnit = new QLabel(QStringLiteral("瓶"));
-    fillQtyUnit->setFont(_fontYahei15);
-    QFrame *fillQtyFrame = new QFrame();
-    fillQtyFrame->setFrameStyle(QFrame::Plain | QFrame::StyledPanel);
-    QHBoxLayout *fillQtyLayout = new QHBoxLayout();
-    fillQtyLayout->addWidget(fillQtyVal);
-    fillQtyLayout->addWidget(fillQtyUnit);
-    fillQtyLayout->setStretch(0, 1);
-    fillQtyFrame->setLayout(fillQtyLayout);
+    fillQtyFrame = new DigitUnitFrame(QStringLiteral("瓶"), true);
+    fillQtyFrame->setFont(_fontYahei15);
+    fillQtyFrame->setHeight(45);
 
     //进度条
     QProgressBar *progBar = new QProgressBar();
-    progBar->setFixedHeight(50);
+    progBar->setMinimumHeight(45);
+
 
     //清零1
     clrBtn1 = new QPushButton(QStringLiteral("清零"));
-    clrBtn1->setStyleSheet("min-width: 100px; \
-                            min-height: 50px; \
-                            background: rgb(85, 0, 255); \
-                            border-radius: 4px; \
-                            font: 14pt '微软雅黑'; \
-                            color:rgb(255, 255, 255);");
+
 
     //有瓶信号
     QFrame *haveBtlFrame = new QFrame();
@@ -159,13 +114,7 @@ void MainWidget::RunStatusWidget()
     exsWarnFrame->setLayout(exsWarnLayout);
 
     //清零2
-    QPushButton *clrBtn2 = new QPushButton(QStringLiteral("清零"));
-    clrBtn2->setStyleSheet("min-width: 100px; \
-                            min-height: 50px; \
-                            background: rgb(85, 0, 255); \
-                            border-radius: 4px; \
-                            font: 14pt '微软雅黑'; \
-                            color:rgb(255, 255, 255);");
+    clrBtn2 = new QPushButton(QStringLiteral("清零"));
 
     QGridLayout *runStatLayout = new QGridLayout();
     runStatLayout->setColumnStretch(0, 1);
@@ -194,65 +143,28 @@ void MainWidget::RunControlWidget()
 {
     //振动盘，启动，停止，学习数据，传送带，保存图片，清瓶
     shaker1Inc = new QPushButton(QStringLiteral("1级振动盘++"));
-    shaker1Inc->setStyleSheet(_shakerQSS);
     shaker1Dec = new QPushButton(QStringLiteral("1级振动盘--"));
-    shaker1Dec->setStyleSheet(_shakerQSS);
     shaker2Inc = new QPushButton(QStringLiteral("2级振动盘++"));
-    shaker2Inc->setStyleSheet(_shakerQSS);
     shaker2Dec = new QPushButton(QStringLiteral("2级振动盘--"));
-    shaker2Dec->setStyleSheet(_shakerQSS);
     shaker3Inc = new QPushButton(QStringLiteral("3级振动盘++"));
-    shaker3Inc->setStyleSheet(_shakerQSS);
     shaker3Dec = new QPushButton(QStringLiteral("3级振动盘--"));
-    shaker3Dec->setStyleSheet(_shakerQSS);
     ctrlStart = new QPushButton(QStringLiteral("启动"));
-    ctrlStart->setStyleSheet("QPushButton#ctrlStart{ "
-                             "min-width: 150px;"
-                             "min-height: 80px;"
-                             "background: rgb(85, 255, 0);"
-                             "border-radius: 4px;"
-                             "font: 14pt '微软雅黑';}");
-    ctrlStop = new QPushButton(QStringLiteral("停止"));
-    ctrlStop->setStyleSheet("min-width: 150px; \
-                             min-height: 80px; \
-                             background:rgb(255, 0, 0); \
-                             border-radius: 4px; \
-                             font: 14pt '微软雅黑';");
-    ctrlClr = new QPushButton(QStringLiteral("清瓶"));
-    ctrlClr->setStyleSheet("min-width: 150px; \
-                            min-height: 80px; \
-                            background: rgb(255, 255, 0); \
-                            border-radius: 4px; \
-                            font: 14pt '微软雅黑'; \
-                            color:rgb(50, 50, 50);}");
-    ctrlStudy = new QPushButton(QStringLiteral("学习数据"));
-    ctrlStudy->setStyleSheet("min-width: 150px; \
-                              min-height: 80px; \
-                              background: rgb(85, 0, 255); \
-                              border-radius: 4px; \
-                              font: 14pt '微软雅黑'; \
-                              color:rgb(255, 255, 255);");
+    ctrlStop = new QPushButton(QStringLiteral("停止"));   
+    ctrlClr = new QPushButton(QStringLiteral("清瓶"));    
+    ctrlStudy = new QPushButton(QStringLiteral("学习数据"));  
     ctrlSave = new QPushButton(QStringLiteral("保存图片"));
-    ctrlSave->setStyleSheet("min-width: 150px; \
-                             min-height: 80px; \
-                             background: rgb(85, 0, 255); \
-                             border-radius: 4px; \
-                             font: 14pt '微软雅黑'; \
-                             color:rgb(255, 255, 255);");
     ctrlBelt = new QPushButton(QStringLiteral("传送带"));
-    ctrlBelt->setStyleSheet("min-width: 150px; \
-                             min-height: 80px; \
-                             background: rgb(85, 0, 255); \
-                             border-radius: 4px; \
-                             font: 14pt '微软雅黑'; \
-                             color:rgb(255, 255, 255);");
-    shaker1Val = new QLabel();
-    shaker1Val->setFrameStyle(QFrame::Plain | QFrame::StyledPanel);
+
+    shaker1Val = new DigitUnitFrame("V", true);
     shaker1Val->setFixedHeight(40);
-    shaker2Val = new QLabel();
-    shaker2Val->setFrameStyle(QFrame::Plain | QFrame::StyledPanel);
-    shaker3Val = new QLabel();
-    shaker3Val->setFrameStyle(QFrame::Plain | QFrame::StyledPanel);
+    shaker1Val->setFont(_fontYahei15);
+    shaker2Val = new DigitUnitFrame("V", true);
+    shaker2Val->setFixedHeight(40);
+    shaker2Val->setFont(_fontYahei15);
+    shaker3Val = new DigitUnitFrame("V", true);
+    shaker3Val->setFixedHeight(40);
+    shaker3Val->setFont(_fontYahei15);
+
 
     QGridLayout *ctrlLayout = new QGridLayout();
     ctrlLayout->addWidget(shaker1Inc, 0, 0);
@@ -284,4 +196,91 @@ void MainWidget::RunControlWidget()
     ctrlLayout->setRowStretch(6, 2);
 
     _controlWidget->setLayout(ctrlLayout);
+
 }
+
+void MainWidget::SetStyleSheet()
+{
+    _shakerQSS = "QPushButton{min-width: 150px; \
+                 min-height: 40px; \
+                 background: rgb(85, 0, 255); \
+                 border-radius: 4px; \
+                 font: 14pt '微软雅黑'; \
+                 color:rgb(255, 255, 255);} \
+                 QPushButton:pressed{ \
+                 background-color: rgb(85, 85, 255);}";
+
+    clrBtn1->setStyleSheet("QPushButton{ \
+                       min-width: 100px; \
+                       min-height: 45px; \
+                       background: rgb(85, 0, 255); \
+                       border-radius: 4px; \
+                       font: 14pt '微软雅黑'; \
+                       color:rgb(255, 255, 255);} \
+                       QPushButton:pressed{ \
+                       background-color: rgb(85, 85, 255);}");
+
+    clrBtn2->setStyleSheet("QPushButton{ \
+                           min-width: 100px; \
+                           min-height: 45px; \
+                           background: rgb(85, 0, 255); \
+                           border-radius: 4px; \
+                           font: 14pt '微软雅黑'; \
+                           color:rgb(255, 255, 255);} \
+                           QPushButton:pressed{ \
+                           background-color: rgb(85, 85, 255);}");
+    shaker1Inc->setStyleSheet(_shakerQSS);
+    shaker1Dec->setStyleSheet(_shakerQSS);
+    shaker2Dec->setStyleSheet(_shakerQSS);
+    shaker2Inc->setStyleSheet(_shakerQSS);
+    shaker3Inc->setStyleSheet(_shakerQSS);
+    shaker3Dec->setStyleSheet(_shakerQSS);
+    ctrlStart->setStyleSheet("QPushButton{"
+                            "min-width: 150px;"
+                            "min-height: 80px;"
+                            "background: rgb(85, 255, 0);"
+                            "border-radius: 4px;"
+                            "font: 14pt '微软雅黑';}"
+                            "QPushButton:pressed{ \
+                            background-color: rgb(218, 165, 32);}");
+    ctrlStop->setStyleSheet("QPushButton{min-width: 150px; \
+                            min-height: 80px; \
+                            background:rgb(255, 0, 0); \
+                            border-radius: 4px; \
+                            font: 14pt '微软雅黑';} \
+                            QPushButton:pressed{ \
+                            background-color: rgb(255, 165, 0);}");
+    ctrlClr->setStyleSheet("min-width: 150px; \
+                            min-height: 80px; \
+                            background: rgb(255, 255, 0); \
+                            border-radius: 4px; \
+                            font: 14pt '微软雅黑'; \
+                            color:rgb(50, 50, 50);}"
+                            "QPushButton:pressed{ \
+                            background-color: rgb(218, 165, 32);}");
+    ctrlStudy->setStyleSheet("QPushButton{min-width: 150px; \
+                              min-height: 80px; \
+                              background: rgb(85, 0, 255); \
+                              border-radius: 4px; \
+                              font: 14pt '微软雅黑'; \
+                              color:rgb(255, 255, 255);} \
+                              QPushButton:pressed{ \
+                              background-color: rgb(85, 85, 255);}");
+    ctrlSave->setStyleSheet("QPushButton{min-width: 150px; \
+                             min-height: 80px; \
+                             background: rgb(85, 0, 255); \
+                             border-radius: 4px; \
+                             font: 14pt '微软雅黑'; \
+                             color:rgb(255, 255, 255);} \
+                             QPushButton:pressed{ \
+                             background-color: rgb(85, 85, 255);}");
+    ctrlBelt->setStyleSheet("QPushButton{min-width: 150px; \
+                             min-height: 80px; \
+                             background: rgb(85, 0, 255); \
+                             border-radius: 4px; \
+                             font: 14pt '微软雅黑'; \
+                             color:rgb(255, 255, 255);} \
+                             QPushButton:pressed{ \
+                             background-color: rgb(85, 85, 255);}");
+}
+

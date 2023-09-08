@@ -2,8 +2,13 @@
 
 SetupWidget::SetupWidget(QWidget *parent) : QWidget(parent)
 {
-    _recipeBtnQSS = "min-width: 256px;min-height: 40px;"
-                    "background: #adb5bd;border-radius: 4px;";
+    _recipeBtnQSS = "QPushButton{"
+                    "min-width: 256px;"
+                    "min-height: 40px;"
+                    "background: #adb5bd;"
+                    "border-radius: 4px;}"
+                    "QPushButton:pressed{"
+                    "background-color: rgb(220, 220, 220);}";
     CreateUi();
 
 }
@@ -38,6 +43,12 @@ void SetupWidget::RecipeWidget()
     QVBoxLayout *recipeLayout = new QVBoxLayout();
     _recipeWidget->setLayout(recipeLayout);
     recipeList = new QListWidget();
+    recipeList->setStyleSheet("QListWidget{"
+                              "background-color: rgb(220, 220, 220);"
+                              "font: 14pt '微软雅黑';}"
+                              "QListWidget::item{"
+                              "height: 30px;}");
+
     recipeName = new QLabel(QStringLiteral("配方名称:"));
     newRecipe = new QLineEdit();
     newRecipe->setStyleSheet("border: 1px solid #1c7ed6; \
@@ -76,44 +87,53 @@ void SetupWidget::IdentifyParaWidget()
     identifyLayout->setColumnStretch(2, 1);
     identifyLayout->setColumnStretch(3, 1);
     thresholdLabel = new QLabel(QStringLiteral("阈值设置"));
-    thresholdVal1 = new QLineEdit();
+    thresholdLabel->setFixedHeight(35);
+    thresholdVal1 = new DigitUnitFrame(QString(), true);
     signTo = new QLabel(QStringLiteral("<->"));
-    thresholdVal2 = new QLineEdit();
+    thresholdVal2 = new DigitUnitFrame(QString(), true);
+
 
     preprocLabel = new QLabel(QStringLiteral("预处理方法"));
+    preprocLabel->setFixedHeight(35);
     preprocType = new QComboBox();
     preprocType->addItem(QStringLiteral("开运算_圆"));
     preprocType->addItem(QStringLiteral("开运算_方"));
     operatorSize = new QLabel(QStringLiteral("算子尺寸"));
-    operatorSizeVal = new QLineEdit();
+    operatorSizeVal = new DigitUnitFrame(QString(), true);
 
     areaSetLabel = new QLabel(QStringLiteral("面积设置"));
-    areaSetVal1 = new QLineEdit();
+    areaSetLabel->setFixedHeight(35);
+    areaSetVal1 = new DigitUnitFrame(QStringLiteral("Pixel"), true);
     signTo1 = new QLabel(QStringLiteral("<->"));
-    areaSetVal2 = new QLineEdit();
+    areaSetVal2 = new DigitUnitFrame(QStringLiteral("Pixel"), true);
 
     radSetLabel = new QLabel(QStringLiteral("半径设置"));
-    radSetVal1 = new QLineEdit();
+    radSetLabel->setFixedHeight(35);
+    radSetVal1 = new DigitUnitFrame(QStringLiteral("Pixel"), true);
     signTo2 = new QLabel(QStringLiteral("<->"));
-    radSetVal2 = new QLineEdit();
+    radSetVal2 = new DigitUnitFrame(QStringLiteral("Pixel"), true);
 
     fillSetLabel = new QLabel(QStringLiteral("填充度设置"));
-    fillSetVal1 = new QLineEdit();
+    fillSetLabel->setFixedHeight(35);
+    fillSetVal1 = new DigitUnitFrame(QString(), true);
     signTo3 = new QLabel(QStringLiteral("<->"));
-    fillSetVal2 = new QLineEdit();
+    fillSetVal2 = new DigitUnitFrame(QString(), true);
 
-    brokenAreaSetLabel = new QLabel(QStringLiteral("填充度设置"));
-    brokenAreaSetVal1 = new QLineEdit();
+    brokenAreaSetLabel = new QLabel(QStringLiteral("残料面积"));
+    brokenAreaSetLabel->setFixedHeight(35);
+    brokenAreaSetVal1 = new DigitUnitFrame(QStringLiteral("Pixel"), true);
     signTo4 = new QLabel(QStringLiteral("<->"));
-    brokenAreaSetVal2 = new QLineEdit();
+    brokenAreaSetVal2 = new DigitUnitFrame(QStringLiteral("Pixel"), true);
 
-    brokenRadSetLabel = new QLabel(QStringLiteral("填充度设置"));
-    brokenRadSetVal1 = new QLineEdit();
+    brokenRadSetLabel = new QLabel(QStringLiteral("残料半径"));
+    brokenRadSetLabel->setFixedHeight(35);
+    brokenRadSetVal1 = new DigitUnitFrame(QStringLiteral("Pixel"), true);
     signTo5 = new QLabel(QStringLiteral("<->"));
-    brokenRadSetVal2 = new QLineEdit();
+    brokenRadSetVal2 = new DigitUnitFrame(QStringLiteral("Pixel"), true);
 
-    remnentAlertLabel = new QLabel(QStringLiteral("填充度设置"));
-    remnentAlertVal = new QLineEdit();
+    remnentAlertLabel = new QLabel(QStringLiteral("余料警戒"));
+    remnentAlertLabel->setFixedHeight(35);
+    remnentAlertVal = new DigitUnitFrame(QStringLiteral("粒"), true);
 
     identifyLayout->addWidget(thresholdLabel, 0, 0);
     identifyLayout->addWidget(thresholdVal1, 0, 1);
@@ -248,38 +268,28 @@ void SetupWidget::MachineCtrlWidget()
     QHBoxLayout *hLayout = new QHBoxLayout();
     QVBoxLayout *vLayout = new QVBoxLayout();
     QGridLayout *gridLayout = new QGridLayout();
-    QString mcBtnQSS = "min-width: 200px; \
-                        min-height: 80px; \
-                        background: #adb5bd; \
-                        border-radius: 4px;";
+    QString mcBtnQSS = "QPushButton{ \
+                            min-width: 200px; \
+                            min-height: 80px; \
+                            background: #adb5bd; \
+                            border-radius: 4px; \
+                            font: 14pt '微软雅黑';} \
+                        QPushButton:pressed{ \
+                            background-color: rgb(211, 211, 211);}";
     mcBelt = new QPushButton(QStringLiteral("传送带"));
-    mcBelt->setStyleSheet(mcBtnQSS);
     mcBlockBottle = new QPushButton(QStringLiteral("挡瓶气缸"));
-    mcBlockBottle->setStyleSheet(mcBtnQSS);
     mcKick = new QPushButton(QStringLiteral("剔除气缸"));
-    mcKick->setStyleSheet(mcBtnQSS);
     mcFunnel = new QPushButton(QStringLiteral("漏斗气缸"));
-    mcFunnel->setStyleSheet(mcBtnQSS);
     mcBlockPlank = new QPushButton(QStringLiteral("挡板气缸"));
-    mcBlockPlank->setStyleSheet(mcBtnQSS);
     mcShaker = new QPushButton(QStringLiteral("振动盘"));
-    mcShaker->setStyleSheet(mcBtnQSS);
     mcPlug1 = new QPushButton(QStringLiteral("插板1"));
-    mcPlug1->setStyleSheet(mcBtnQSS);
     mcPlug2 = new QPushButton(QStringLiteral("插板2"));
-    mcPlug2->setStyleSheet(mcBtnQSS);
     mcPlug3 = new QPushButton(QStringLiteral("插板3"));
-    mcPlug3->setStyleSheet(mcBtnQSS);
     mcPlug4 = new QPushButton(QStringLiteral("插板4"));
-    mcPlug4->setStyleSheet(mcBtnQSS);
     mcPlug5 = new QPushButton(QStringLiteral("插板5"));
-    mcPlug5->setStyleSheet(mcBtnQSS);
     mcPlug6 = new QPushButton(QStringLiteral("插板6"));
-    mcPlug6->setStyleSheet(mcBtnQSS);
     mcPlug7 = new QPushButton(QStringLiteral("插板7"));
-    mcPlug7->setStyleSheet(mcBtnQSS);
     mcPlug8 = new QPushButton(QStringLiteral("插板8"));
-    mcPlug8->setStyleSheet(mcBtnQSS);
 
     vLayout->addWidget(mcBelt);
     vLayout->addWidget(mcBlockBottle);
@@ -295,15 +305,25 @@ void SetupWidget::MachineCtrlWidget()
     gridLayout->addWidget(mcPlug7, 3, 0);
     gridLayout->addWidget(mcPlug8, 3, 1);
 
-    hLayout->addLayout(vLayout);
-    hLayout->addWidget(mcShaker);
-    hLayout->addLayout(gridLayout);
+    hLayout->addLayout(vLayout, 1);
+    hLayout->addWidget(mcShaker, 1);
+    hLayout->addLayout(gridLayout, 2);
 
     _machineCtrlWidget->setLayout(hLayout);
+    _machineCtrlWidget->setStyleSheet(mcBtnQSS);
 }
 
 void SetupWidget::ElectricParaWidget()
 {
+    QString btnQSS = "QPushButton{ \
+                            min-width: 200px; \
+                            min-height: 80px; \
+                            background: #adb5bd; \
+                            border-radius: 4px; \
+                            font: 14pt '微软雅黑';} \
+                        QPushButton:pressed{ \
+                            background-color: rgb(211, 211, 211);}";
+
     _electricParaWidget = new QWidget();
     QVBoxLayout *vLayout = new QVBoxLayout();
     QHBoxLayout *hLayout1 = new QHBoxLayout();
@@ -311,38 +331,57 @@ void SetupWidget::ElectricParaWidget()
     QGridLayout *gLayout1 = new QGridLayout();
     QGridLayout *gLayout2 = new QGridLayout();
     epCutTime = new QLabel(QStringLiteral("卡料时间"));
-    epCutTimeVal = new QLineEdit();
+    epCutTime->setFixedHeight(40);
+    epCutTimeVal = new DigitUnitFrame(QStringLiteral("ms"), true);
     epDropDelay = new QLabel(QStringLiteral("落料延时"));
-    epDropDelayVal = new QLineEdit();
+    epDropDelay->setFixedHeight(40);
+    epDropDelayVal = new DigitUnitFrame(QStringLiteral("ms"), true);
     epFillTime = new QLabel(QStringLiteral("装瓶时间"));
-    epFillTimeVal = new QLineEdit();
+    epFillTime->setFixedHeight(40);
+    epFillTimeVal = new DigitUnitFrame(QStringLiteral("ms"), true);
     epChangeTime = new QLabel(QStringLiteral("换瓶时间"));
-    epChangeTimeVal = new QLineEdit();
+    epChangeTime->setFixedHeight(40);
+    epChangeTimeVal = new DigitUnitFrame(QStringLiteral("ms"), true);
     epFlawKickTime = new QLabel(QStringLiteral("瑕疵剔除时间"));
-    epFlawKickTimeVal = new QLineEdit();
+    epFlawKickTime->setFixedHeight(40);
+    epFlawKickTimeVal = new DigitUnitFrame(QStringLiteral("ms"), true);
     epFlawKickDelay = new QLabel(QStringLiteral("瑕疵剔除延时"));
-    epFlawKickDelayVal = new QLineEdit();
+    epFlawKickDelay->setFixedHeight(40);
+    epFlawKickDelayVal = new DigitUnitFrame(QStringLiteral("ms"), true);
     epShakeTime = new QLabel(QStringLiteral("抖动时间"));
-    epShakeTimeVal = new QLineEdit();
+    epShakeTime->setFixedHeight(40);
+    epShakeTimeVal = new DigitUnitFrame(QStringLiteral("ms"), true);
     epBlock2Time = new QLabel(QStringLiteral("2号挡瓶时间"));
-    epBlock2TimeVal = new QLineEdit();
+    epBlock2Time->setFixedHeight(40);
+    epBlock2TimeVal = new DigitUnitFrame(QStringLiteral("ms"), true);
     epShaker1Volt = new QLabel(QStringLiteral("振动盘1电压设定"));
-    epShaker1VoltVal = new QLineEdit();
+    epShaker1Volt->setFixedHeight(40);
+    epShaker1VoltVal = new DigitUnitFrame(QStringLiteral("V"), true);
     epShaker1Freq = new QLabel(QStringLiteral("振动盘1频率设定"));
-    epShaker1FreqVal = new QLineEdit();
+    epShaker1Freq->setFixedHeight(40);
+    epShaker1FreqVal = new DigitUnitFrame(QStringLiteral("Hz"), true);
     epShaker2Volt = new QLabel(QStringLiteral("振动盘2电压设定"));
-    epShaker2VoltVal = new QLineEdit();
+    epShaker2Volt->setFixedHeight(40);
+    epShaker2VoltVal = new DigitUnitFrame(QStringLiteral("V"), true);
     epShaker2Freq = new QLabel(QStringLiteral("振动盘2频率设定"));
-    epShaker2FreqVal = new QLineEdit();
+    epShaker2Freq->setFixedHeight(40);
+    epShaker2FreqVal = new DigitUnitFrame(QStringLiteral("Hz"), true);
     epShaker3Volt = new QLabel(QStringLiteral("振动盘3电压设定"));
-    epShaker3VoltVal = new QLineEdit();
+    epShaker3Volt->setFixedHeight(40);
+    epShaker3VoltVal = new DigitUnitFrame(QStringLiteral("V"), true);
     epShaker3Freq = new QLabel(QStringLiteral("振动盘3频率设定"));
-    epShaker3FreqVal = new QLineEdit();
+    epShaker3Freq->setFixedHeight(40);
+    epShaker3FreqVal = new DigitUnitFrame(QStringLiteral("Hz"), true);
     epShakerRadio = new QLabel(QStringLiteral("振动盘停止百分比"));
-    epShakerRadioVal = new QLineEdit();
+    epShakerRadio->setFixedHeight(40);
+    epShakerRadioVal = new DigitUnitFrame(QStringLiteral("%"), true);
     motorUp = new QPushButton(QStringLiteral("电机上升"));
     unLoadCylinder = new QPushButton(QStringLiteral("脱卸气缸"));
     motorDown = new QPushButton(QStringLiteral("电机下降"));
+
+    motorUp->setStyleSheet(btnQSS);
+    unLoadCylinder->setStyleSheet(btnQSS);
+    motorDown->setStyleSheet(btnQSS);
 
     gLayout1->addWidget(epCutTime, 0, 0);
     gLayout1->addWidget(epCutTimeVal, 0, 1);
@@ -385,6 +424,7 @@ void SetupWidget::ElectricParaWidget()
     vLayout->addLayout(hLayout1);
     vLayout->addLayout(hLayout2);
     _electricParaWidget->setLayout(vLayout);
+    //_electricParaWidget->setStyleSheet(btnQSS);
 
 }
 
