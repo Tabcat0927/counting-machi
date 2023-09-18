@@ -18,6 +18,8 @@
 #include "visiongraph.h"
 #include "digitunitframe.h"
 
+#pragma execution_character_set("utf-8")
+
 class MainWidget : public QWidget
 {
     Q_OBJECT
@@ -63,6 +65,7 @@ public:
     DigitUnitFrame *shaker2Val;
     DigitUnitFrame *shaker3Val;
 
+    bool        isStudy;
 
 private:
     QFont       _fontYahei15;
@@ -76,6 +79,8 @@ private:
 
 signals:
 
+public slots:
+    void CtrlStudyToggled(bool);
 };
 
 #endif // CENTRALWIDGET_H
