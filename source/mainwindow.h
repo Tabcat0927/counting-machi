@@ -8,9 +8,15 @@
 #include <QIcon>
 #include <QStackedWidget>
 #include <QDialog>
+#include <QTextCodec>
+#include <QDebug>
+#include <QThread>
 
-#include "mainwidget.h"
-#include "setupwidget.h"
+#include "xvlog.h"
+#include "xvlogwidget.h"
+#include "countingprocess.h"
+#include "CountGrain.h"
+
 
 class MainWindow : public QMainWindow
 {
@@ -28,12 +34,20 @@ public:
     QAction     *userLogin;
     QAction     *setUp;
     QAction     *runProg;
-    QAction     *minWin;
+    QAction     *mainWin;
+    QAction     *logAction;
     QAction     *closeProg;
     QStackedWidget   *stackedWidget;
-    MainWidget    *mainWidget;
-    SetupWidget      *setupWidget;
+//    MainWidget    *mainWidget;
+//    SetupWidget      *setupWidget;
     QDialog     *loginDialog;
+    XVLogWidget   *logWidget;
+    CountingProcess *cntProc;
+
+private:
+    QThread   countThread;
+
+signals:
 
 
 public slots:
@@ -41,7 +55,11 @@ public slots:
     void setUpTriggerd();
     void runProgToggled(bool);
     void minWinTriggerd();
-
+    void logActionTriggered();
+    void SlotShowImage(QImage);
+    void SlotStudy(QVector<XVRegion>);
+    int GetXVRegionArea(XVRegion&);
+    float GetXVRegionRadius(XVRegion&);
 
 };
 #endif // MAINWINDOW_H

@@ -18,6 +18,8 @@
 
 #include "digitunitframe.h"
 
+#pragma execution_character_set("utf-8")
+
 class SetupWidget : public QWidget
 {
     Q_OBJECT
@@ -56,14 +58,14 @@ public:
     DigitUnitFrame *fillSetVal1;
     QLabel *signTo3;
     DigitUnitFrame *fillSetVal2;
-    QLabel *brokenAreaSetLabel;
-    DigitUnitFrame *brokenAreaSetVal1;
+    QLabel *flawAreaSetLabel;
+    DigitUnitFrame *flawAreaSetVal1;
     QLabel *signTo4;
-    DigitUnitFrame *brokenAreaSetVal2;
-    QLabel *brokenRadSetLabel;
-    DigitUnitFrame *brokenRadSetVal1;
+    DigitUnitFrame *flawAreaSetVal2;
+    QLabel *flawRadSetLabel;
+    DigitUnitFrame *flawRadSetVal1;
     QLabel *signTo5;
-    DigitUnitFrame *brokenRadSetVal2;
+    DigitUnitFrame *flawRadSetVal2;
     QLabel *remnentAlertLabel;
     DigitUnitFrame *remnentAlertVal;
     //camera parameter

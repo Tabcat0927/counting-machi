@@ -8,18 +8,21 @@
 #include <QHBoxLayout>
 #include <QFont>
 #include <QIntValidator>
+#include <QSpinBox>
 
 class DigitUnitFrame : public QFrame
 {
     Q_OBJECT
 public:
     DigitUnitFrame(QString unit, bool isEditable);
-    void setFont(QFont font);
-    void setHeight(int height);
+    void setFont(QFont);
+    void setHeight(int);
+    int value();
+    void setValue(int);
 
 private:
     QLabel      *_unit;
-    QLineEdit   *_val;
+    QSpinBox    *_val;
 };
 
 #endif // DIGITUNITFRAME_H

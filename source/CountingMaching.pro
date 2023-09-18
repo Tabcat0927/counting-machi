@@ -16,6 +16,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    countingprocess.cpp \
     digitunitframe.cpp \
     loginwidget.cpp \
     main.cpp \
@@ -24,6 +25,7 @@ SOURCES += \
     setupwidget.cpp
 
 HEADERS += \
+    countingprocess.h \
     digitunitframe.h \
     loginwidget.h \
     mainwidget.h \
@@ -53,12 +55,16 @@ win32 : contains(QT_ARCH, i386){
     CONFIG(debug, debug | release){
         DESTDIR = $$PWD/../bin/debug
         OBJECTS_DIR = $$PWD/../temp/debug
-        LIBS += $$PWD/../lib/debug/VisionGraph.lib
+
     }
     CONFIG(release, debug | release){
         DESTDIR = $$PWD/../bin/release
         OBJECTS_DIR = $$PWD/../temp/release
         LIBS += $$PWD/../lib/release/VisionGraph.lib
+        LIBS += $$PWD/../lib/release/XVLog.lib
+        LIBS += $$PWD/../lib/release/BlobAnalysisPro.lib
+        LIBS += $$PWD/../lib/release/CountGrain.lib
+        LIBS += $$PWD/../lib/release/Preprocess.lib
     }
 }
 

@@ -2,7 +2,8 @@
 
 MainWidget::MainWidget(QWidget *parent) : QWidget(parent)
 {
-    _fontYahei15 = QFont(QStringLiteral("微软雅黑"), 15);
+    _fontYahei15 = QFont("微软雅黑", 15);
+    isStudy = false;
 
     vgShowImage = new VisionGraph();
     vgShowImage->setBkImg(QImage(":/icon/ico/JianfengLogo.png"));
@@ -10,6 +11,8 @@ MainWidget::MainWidget(QWidget *parent) : QWidget(parent)
 
     CreateUi();
     SetStyleSheet();
+
+    connect(ctrlStudy, &QPushButton::toggled, this, &MainWidget::CtrlStudyToggled);
 }
 
 void MainWidget::CreateUi()
@@ -24,7 +27,7 @@ void MainWidget::CreateUi()
     RunControlWidget();
 
     QVBoxLayout *rightLayout = new QVBoxLayout();
-    QLabel *curRecipe = new QLabel(QStringLiteral("当前配方："));
+    QLabel *curRecipe = new QLabel("当前配方：");
     curRecipe->setFont(_fontYahei15);
     rightLayout->addWidget(curRecipe);
     rightLayout->addWidget(_statusWidget, 1);
@@ -39,8 +42,8 @@ void MainWidget::CreateUi()
 void MainWidget::DisplayImages()
 {
     QVBoxLayout *vLayout = new QVBoxLayout();
-    companyName = new QLabel(QStringLiteral("南通剑烽机械有限公司"));
-    companyName->setFont(QFont(QStringLiteral("微软雅黑"), 20));
+    companyName = new QLabel("南通剑烽机械有限公司");
+    companyName->setFont(QFont("微软雅黑", 20));
 
     vLayout->addWidget(companyName, 0, Qt::AlignCenter);
     vLayout->addWidget(vgShowImage, 1);
@@ -51,37 +54,37 @@ void MainWidget::DisplayImages()
 void MainWidget::RunStatusWidget()
 {
     //当前数量current quantity
-    curQtyText = new QLabel(QStringLiteral("当前数量"));
+    curQtyText = new QLabel("当前数量");
     curQtyText->setFont(_fontYahei15);
-    curQtyFrame = new DigitUnitFrame(QStringLiteral("粒"), true);
+    curQtyFrame = new DigitUnitFrame("粒", false);
     curQtyFrame->setFont(_fontYahei15);
     curQtyFrame->setHeight(45);
 
     //单瓶数量single bottle quantity
-    aBtlQtyText = new QLabel(QStringLiteral("单瓶数量"));
+    aBtlQtyText = new QLabel("单瓶数量");
     aBtlQtyText->setFont(_fontYahei15);
-    aBtlQtyFrame = new DigitUnitFrame(QStringLiteral("粒/瓶"), false);
+    aBtlQtyFrame = new DigitUnitFrame("粒/瓶", true);
     aBtlQtyFrame->setFont(_fontYahei15);
     aBtlQtyFrame->setHeight(45);
 
     //计数速度
-    cntSpdText = new QLabel(QStringLiteral("计数速度"));
+    cntSpdText = new QLabel("计数速度");
     cntSpdText->setFont(_fontYahei15);
-    cntSpdFrame = new DigitUnitFrame(QStringLiteral("粒/秒"), true);
+    cntSpdFrame = new DigitUnitFrame("粒/秒", false);
     cntSpdFrame->setFont(_fontYahei15);
     cntSpdFrame->setHeight(45);
 
     //装瓶速度
-    fillSpdText = new QLabel(QStringLiteral("装瓶速度"));
+    fillSpdText = new QLabel("装瓶速度");
     fillSpdText->setFont(_fontYahei15);
-    fillSpdFrame = new DigitUnitFrame(QStringLiteral("瓶/分"), true);
+    fillSpdFrame = new DigitUnitFrame("瓶/分", false);
     fillSpdFrame->setFont(_fontYahei15);
     fillSpdFrame->setHeight(45);
 
     //已装瓶数量
-    fillQtyText = new QLabel(QStringLiteral("已装瓶数量"));
+    fillQtyText = new QLabel("已装瓶数量");
     fillQtyText->setFont(_fontYahei15);
-    fillQtyFrame = new DigitUnitFrame(QStringLiteral("瓶"), true);
+    fillQtyFrame = new DigitUnitFrame("瓶", false);
     fillQtyFrame->setFont(_fontYahei15);
     fillQtyFrame->setHeight(45);
 
@@ -91,14 +94,14 @@ void MainWidget::RunStatusWidget()
 
 
     //清零1
-    clrBtn1 = new QPushButton(QStringLiteral("清零"));
+    clrBtn1 = new QPushButton("清零");
 
 
     //有瓶信号
     QFrame *haveBtlFrame = new QFrame();
     haveBtlFrame->setFrameStyle(QFrame::Plain | QFrame::StyledPanel);
     QVBoxLayout *haveBtlLayout = new QVBoxLayout();
-    haveBtlText = new QLabel(QStringLiteral("有瓶信号"));
+    haveBtlText = new QLabel("有瓶信号");
     haveBtlText->setFont(_fontYahei15);
     haveBtlLayout->addWidget(haveBtlText);
     haveBtlFrame->setLayout(haveBtlLayout);
@@ -108,13 +111,13 @@ void MainWidget::RunStatusWidget()
     QFrame *exsWarnFrame = new QFrame();
     exsWarnFrame->setFrameStyle(QFrame::Plain | QFrame::StyledPanel);
     QVBoxLayout *exsWarnLayout = new QVBoxLayout();
-    exsWarnText = new QLabel(QStringLiteral("过量警告"));
+    exsWarnText = new QLabel("过量警告");
     exsWarnText->setFont(_fontYahei15);
     exsWarnLayout->addWidget(exsWarnText);
     exsWarnFrame->setLayout(exsWarnLayout);
 
     //清零2
-    clrBtn2 = new QPushButton(QStringLiteral("清零"));
+    clrBtn2 = new QPushButton("清零");
 
     QGridLayout *runStatLayout = new QGridLayout();
     runStatLayout->setColumnStretch(0, 1);
@@ -142,18 +145,19 @@ void MainWidget::RunStatusWidget()
 void MainWidget::RunControlWidget()
 {
     //振动盘，启动，停止，学习数据，传送带，保存图片，清瓶
-    shaker1Inc = new QPushButton(QStringLiteral("1级振动盘++"));
-    shaker1Dec = new QPushButton(QStringLiteral("1级振动盘--"));
-    shaker2Inc = new QPushButton(QStringLiteral("2级振动盘++"));
-    shaker2Dec = new QPushButton(QStringLiteral("2级振动盘--"));
-    shaker3Inc = new QPushButton(QStringLiteral("3级振动盘++"));
-    shaker3Dec = new QPushButton(QStringLiteral("3级振动盘--"));
-    ctrlStart = new QPushButton(QStringLiteral("启动"));
-    ctrlStop = new QPushButton(QStringLiteral("停止"));   
-    ctrlClr = new QPushButton(QStringLiteral("清瓶"));    
-    ctrlStudy = new QPushButton(QStringLiteral("学习数据"));  
-    ctrlSave = new QPushButton(QStringLiteral("保存图片"));
-    ctrlBelt = new QPushButton(QStringLiteral("传送带"));
+    shaker1Inc = new QPushButton("1级振动盘++");
+    shaker1Dec = new QPushButton("1级振动盘--");
+    shaker2Inc = new QPushButton("2级振动盘++");
+    shaker2Dec = new QPushButton("2级振动盘--");
+    shaker3Inc = new QPushButton("3级振动盘++");
+    shaker3Dec = new QPushButton("3级振动盘--");
+    ctrlStart = new QPushButton("启动");
+    ctrlStop = new QPushButton("停止");
+    ctrlClr = new QPushButton("清瓶");
+    ctrlStudy = new QPushButton("学习数据");
+    ctrlStudy->setCheckable(true);
+    ctrlSave = new QPushButton("保存图片");
+    ctrlBelt = new QPushButton("传送带");
 
     shaker1Val = new DigitUnitFrame("V", true);
     shaker1Val->setFixedHeight(40);
@@ -284,3 +288,7 @@ void MainWidget::SetStyleSheet()
                              background-color: rgb(85, 85, 255);}");
 }
 
+void MainWidget::CtrlStudyToggled(bool checked)
+{
+    isStudy = checked;
+}
