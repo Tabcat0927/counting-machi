@@ -1,0 +1,5 @@
+Exceptions:
+Exception Code :c0000005 ACCESS_VIOLATION(¶ÁÐ´·Ç·¨ÄÚ´æ)
+Fault address:  6763CAC0 01:0014BAC0 D:\Qt\Qt5.14.2\5.14.2\msvc2017\bin\Qt5Widgets.dll
+
+Registers:
