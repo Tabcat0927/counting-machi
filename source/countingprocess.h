@@ -9,6 +9,7 @@
 #include <QElapsedTimer>
 #include <QTime>
 #include <QEventLoop>
+#include <QThread>
 
 #include "BlobAnalysis.h"
 #include "CountGrain.h"
@@ -24,15 +25,15 @@ class CountingProcess : public QObject
 {
     Q_OBJECT
 public:
-    explicit CountingProcess(QObject *parent = nullptr);
+    explicit CountingProcess(MainWidget *mw, SetupWidget *sw, QObject *parent = nullptr);
 
     void Sleep(int);
     int GetXVRegionArea(XVRegion&);
     float GetXVRegionRadius(XVRegion&);
 
 public:
-    MainWidget    *mainWidget;
-    SetupWidget   *setupWidget;
+    MainWidget    *mw;
+    SetupWidget   *sw;
     int           showImageNum;
     int           showImageCnt;
     int           grainCnt;
@@ -43,6 +44,7 @@ public:
     bool          haveBottle;
     bool          excessWarn;
     bool          isFlaw;
+    bool          isBottleFull;
     bool          isDoubleRemove;
     bool          isCameraConnect;
     bool          isCountStop;
@@ -63,6 +65,7 @@ public slots:
 signals:
     void SignalShowImage(QImage);
     void SignalStudy(QVector<XVRegion>);
+    void SignalCountChanged(int, int, int, int);
 
 private:
     XVImage        _imageUp, _imageDown;
@@ -78,16 +81,19 @@ private:
     bool CopyXVImage(XVImage&, XVImage*);
     void PaintXVRegion(XVRegion&, XVImage&, int);
     void ProcessTiledImage(XVImage&, XVSplitRegionToBlobsOut*);
-    bool DealwithBlobs(XVSplitRegionToBlobsOut&);
+    void DealwithBlobs(XVSplitRegionToBlobsOut&);
     bool TestRegionIntersection(XVRegion&, XVRegion&);
     void KickoutDouble();
     void DrawMainWindowImage();
     XVImage CropXVImage(XVImage&);
-    void OtherThings(QElapsedTimer&);
     bool MirrorXVImage(XVImage&, XVImage*);
     bool TileXVImage(XVImage&, XVImage&, XVImage*);
     XVRegion CreateRectXVRegion(int, int);
     void CountUndCommunication(XVRegion&);
+    void CommunicateWithPLC();
+    void HandleAbnormal(int, int);
+    bool BolbInNormalRange(int, int);
+    bool BolbInFlawRange(int, int);
 
 };
 

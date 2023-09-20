@@ -15,8 +15,13 @@
 #include <QGridLayout>
 #include <QFormLayout>
 #include <QGroupBox>
+#include <QSettings>
+#include <QMessageBox>
+#include <QDir>
+#include <QTimer>
 
 #include "digitunitframe.h"
+#include "mainwidget.h"
 
 #pragma execution_character_set("utf-8")
 
@@ -24,11 +29,19 @@ class SetupWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit SetupWidget(QWidget *parent = nullptr);
+    explicit SetupWidget(MainWidget *mw, QWidget *parent = nullptr);
 
     void CreateUi();
 
+public slots:
+    void SlotRecipeLoad();
+    void SlotRecipeNew();
+    void SlotRecipeSave();
+    void SlotRecipeDel();
+    void SlotSelectRecipe(const QString&);
+
 public:
+    MainWidget *mw;
     //recipe
     QListWidget *recipeList;
     QLabel *recipeName;
@@ -76,25 +89,19 @@ public:
     QLabel *expoTimeLabel;
     QDoubleSpinBox *expoTimeVal;
     QLabel *plcIpLabel;
-    QLineEdit *plcIpVal;
+    DigitUnitFrame *plcIpVal;
     QLabel *rtQtyAddrLabel;
-    QLabel *D1;
-    QLineEdit *rtQtyAddrVal;
+    QSpinBox *rtQtyAddrVal;
     QLabel *aQtyAddrLabel;
-    QLabel *D2;
-    QLineEdit *aQtyAddrVal;
+    QSpinBox *aQtyAddrVal;
     QLabel *coorXAddrLabel;
-    QLabel *D3;
-    QLineEdit *coorXAddrVal;
+    QSpinBox *coorXAddrVal;
     QLabel *coorYAddrLabel;
-    QLabel *D4;
-    QLineEdit *coorYAddrVal;
+    QSpinBox *coorYAddrVal;
     QLabel *fullAddrLabel;
-    QLabel *M1;
-    QLineEdit *fullAddrVal;
+    QSpinBox *fullAddrVal;
     QLabel *flawAddrLabel;
-    QLabel *M2;
-    QLineEdit *flawAddrVal;
+    QSpinBox *flawAddrVal;
     //machine control
     QPushButton *mcBelt;
     QPushButton *mcBlockBottle;
@@ -139,8 +146,8 @@ public:
     DigitUnitFrame *epShaker3VoltVal;
     QLabel *epShaker3Freq;
     DigitUnitFrame *epShaker3FreqVal;
-    QLabel *epShakerRadio;
-    DigitUnitFrame *epShakerRadioVal;
+    QLabel *epStopRatio;
+    DigitUnitFrame *epStopRatioVal;
     QPushButton *motorUp;
     QPushButton *unLoadCylinder;
     QPushButton *motorDown;
@@ -170,9 +177,17 @@ private:
     void ElectricParaWidget();
     void OtherParaWidget();
 
+    void ReadSettingFile(const QString&);
+    void Write2SettingFile(const QString&);
+    void LoadRecipeName();
+    bool TestContainRecipe(const QString&);
+    bool CheckRecipeName();
+    void LoadRecipeParameter();
+
 
 private:
     QString _recipeBtnQSS;
+    QFont   _fontYahei15;
 
     QWidget *_recipeWidget;
     QWidget *_identifyParaWidget;

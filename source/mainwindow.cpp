@@ -4,34 +4,39 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    //func
     qRegisterMetaType<QVector<XVRegion>>("QVector<XVRegion>");
-    cntProc = new CountingProcess();
-    cntProc->moveToThread(&countThread);
-    connect(&countThread, &QThread::started, cntProc, &CountingProcess::Count);
-    connect(cntProc, &CountingProcess::SignalShowImage, this, &MainWindow::SlotShowImage);
-    connect(cntProc, &CountingProcess::SignalStudy, this, &MainWindow::SlotStudy);
     //ui
     setWindowIcon(QIcon(":/icon/ico/ivision.ico"));
     CreateToolBar();
+    stackedWidget  = new QStackedWidget();
+    mainWidget = new MainWidget();
+    setupWidget = new SetupWidget(mainWidget);
+    logWidget = new XVLogWidget(QString());
+    stackedWidget->addWidget(mainWidget);
+    stackedWidget->addWidget(setupWidget);
+    stackedWidget->addWidget(logWidget);
+    setCentralWidget(stackedWidget);
+    showMaximized();
 
     loginDialog = new QDialog(this);
     LoginWidget();
 
-    stackedWidget  = new QStackedWidget();
-    stackedWidget->addWidget(cntProc->mainWidget);
-    stackedWidget->addWidget(cntProc->setupWidget);
-    logWidget = new XVLogWidget(QString());
-    stackedWidget->addWidget(logWidget);
-
-    setCentralWidget(stackedWidget);
-    showMaximized();
+    //func    
+    countProc = new CountingProcess(mainWidget, setupWidget);
+    countProc->moveToThread(&countThread);
+    connect(&countThread, &QThread::started, countProc, &CountingProcess::Count);
+    connect(countProc, &CountingProcess::SignalShowImage, this, &MainWindow::SlotShowImage);
+    connect(countProc, &CountingProcess::SignalStudy, this, &MainWindow::SlotStudy);
+    connect(countProc, &CountingProcess::SignalCountChanged, this, &MainWindow::SlotCountChanged);
 
 }
 
 MainWindow::~MainWindow()
 {
-    //delete cntProc;
+    delete mainWidget;
+    delete setupWidget;
+    delete logWidget;
+    delete countProc;
     countThread.quit();
     countThread.wait();
 }
@@ -61,8 +66,8 @@ void MainWindow::CreateToolBar()
     mainWin = new QAction(QIcon(":/icon/ico/project/camera.png"), "主页面");
     connect(mainWin, &QAction::triggered, this, &MainWindow::minWinTriggerd);
 
-    //日志
-    logAction = new QAction(QIcon(":/icon/ico/log.png"), "日志");
+    //日志界面
+    logAction = new QAction(QIcon(":/icon/ico/log.png"), "日志界面");
     connect(logAction, &QAction::triggered, this, &MainWindow::logActionTriggered);
 
     //退出系统
@@ -110,13 +115,13 @@ void MainWindow::runProgToggled(bool checked)
     if(checked){
         runProg->setIcon(QIcon(":/icon/ico/project/stop.png"));
         runProg->setText("停止运行");
-        cntProc->isCountStop = false;
+        countProc->isCountStop = false;
         countThread.start(QThread::HighestPriority);
     }
     else{
         runProg->setIcon(QIcon(":/icon/ico/project/start.png"));
         runProg->setText("开始运行");
-        cntProc->isCountStop = true;
+        countProc->isCountStop = true;
         countThread.quit();
         countThread.wait();
     }
@@ -163,7 +168,7 @@ void MainWindow::LoginWidget()
 
 void MainWindow::SlotShowImage(QImage img)
 {
-    VisionGraph *vg = cntProc->mainWidget->vgShowImage;
+    VisionGraph *vg = mainWidget->vgShowImage;
     vg->clearPainter();
     vg->setBkImg(img);
     vg->setViewSize_Fit();
@@ -189,8 +194,8 @@ void MainWindow::SlotStudy(QVector<XVRegion> studyRegion)
 
     grainDataLearn(learnAreaInArea, learnAreaOut);
     if(learnAreaOut.GrainDataLearnResult == 1){
-        cntProc->setupWidget->areaSetVal1->setValue((int)learnAreaOut.minThreshold);
-        cntProc->setupWidget->areaSetVal2->setValue((int)learnAreaOut.maxThreshold);
+        setupWidget->areaSetVal1->setValue((int)learnAreaOut.minThreshold);
+        setupWidget->areaSetVal2->setValue((int)learnAreaOut.maxThreshold);
         Log::Instance()->writeInfo("学习算法结果面积最大值 = " + QString("%1").arg(learnAreaOut.maxThreshold));
         Log::Instance()->writeInfo("学习算法结果面积最小值 = " + QString("%1").arg(learnAreaOut.minThreshold));
     }
@@ -198,17 +203,17 @@ void MainWindow::SlotStudy(QVector<XVRegion> studyRegion)
 
     grainDataLearn(learnAreaInRadius, learnAreaOut);
     if(learnAreaOut.GrainDataLearnResult == 1){
-        cntProc->setupWidget->radSetVal1->setValue((int)learnAreaOut.minThreshold);
-        cntProc->setupWidget->radSetVal1->setValue((int)learnAreaOut.maxThreshold);
+        setupWidget->radSetVal1->setValue((int)learnAreaOut.minThreshold);
+        setupWidget->radSetVal1->setValue((int)learnAreaOut.maxThreshold);
         Log::Instance()->writeInfo("学习算法结果半径最大值 = " + QString("%1").arg(learnAreaOut.minThreshold));
         Log::Instance()->writeInfo("学习算法结果半径最小值 = " + QString("%1").arg(learnAreaOut.maxThreshold));
         Log::Instance()->writeInfo("***********学习成功***********");
     }
     else Log::Instance()->writeWarn("学习数据失败");
     studyRegion.clear();
-    cntProc->mainWidget->ctrlStudy->setChecked(false);
-    cntProc->beginStudy = false;
-    cntProc->isCountStop = true;
+    mainWidget->ctrlStudy->setChecked(false);
+    countProc->beginStudy = false;
+    countProc->isCountStop = true;
 }
 
 int MainWindow::GetXVRegionArea(XVRegion &region)
@@ -229,4 +234,25 @@ float MainWindow::GetXVRegionRadius(XVRegion &region)
     XVRegionBoundingCircle(circle_in, circle_out);
 
     return circle_out.outCircle.radius;
+}
+
+void MainWindow::Write2SysSettingFile(const QString &filename)
+{
+    QSettings setting(filename, QSettings::IniFormat);
+    setting.setValue("curRecipe", mainWidget->curRecipeVal->text());
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    Write2SysSettingFile("config/system/sys");
+    event->accept();
+}
+
+void MainWindow::SlotCountChanged(int val1, int val2, int val3, int val4)
+{
+    mainWidget->curQtyFrame->setValue(val1);
+    mainWidget->cntSpdFrame->setValue(val2);
+    mainWidget->fillSpdFrame->setValue(val3);
+    mainWidget->fillQtyFrame->setValue(val4);
+    mainWidget->progBar->setValue(val1 * 100 / mainWidget->aBtlQtyFrame->value());
 }

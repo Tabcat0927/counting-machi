@@ -14,6 +14,7 @@
 #include <QFrame>
 #include <QGroupBox>
 #include <QProgressBar>
+#include <QSettings>
 
 #include "visiongraph.h"
 #include "digitunitframe.h"
@@ -32,6 +33,8 @@ public:
     void RunControlWidget();
 
 public:
+    QLabel *curRecipe;
+    QLabel *curRecipeVal;
     VisionGraph *vgShowImage;
     QLabel *companyName;
     QLabel *curQtyText;
@@ -48,6 +51,7 @@ public:
     QPushButton *clrBtn2;
     QLabel *haveBtlText;
     QLabel *exsWarnText;
+    QProgressBar *progBar;
 
     QPushButton *shaker1Inc;
     QPushButton *shaker1Dec;
@@ -67,6 +71,7 @@ public:
 
     bool        isStudy;
 
+
 private:
     QFont       _fontYahei15;
     QString     _shakerQSS;
@@ -76,6 +81,7 @@ private:
 
 private:
     void SetStyleSheet();
+    void ReadSysSettingFile(const QString&);
 
 signals:
 

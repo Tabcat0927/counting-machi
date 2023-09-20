@@ -1,15 +1,28 @@
 ﻿#include "setupwidget.h"
 
-SetupWidget::SetupWidget(QWidget *parent) : QWidget(parent)
+void promptMessage(const QString&);
+
+SetupWidget::SetupWidget(MainWidget *mw, QWidget *parent) :
+             QWidget(parent), mw(mw)
 {
+    _fontYahei15 = QFont("微软雅黑", 15);
     _recipeBtnQSS = "QPushButton{"
                     "min-width: 256px;"
                     "min-height: 40px;"
                     "background: #adb5bd;"
+                    "font: 12pt '微软雅黑';"
                     "border-radius: 4px;}"
                     "QPushButton:pressed{"
                     "background-color: rgb(220, 220, 220);}";
     CreateUi();
+    LoadRecipeName();
+    LoadRecipeParameter();
+    connect(btnNew, &QPushButton::clicked, this, &SetupWidget::SlotRecipeNew);
+    connect(btnLoad, &QPushButton::clicked, this, &SetupWidget::SlotRecipeLoad);
+    connect(btnSave, &QPushButton::clicked, this, &SetupWidget::SlotRecipeSave);
+    connect(btnDelete, &QPushButton::clicked, this, &SetupWidget::SlotRecipeDel);
+    connect(recipeList, &QListWidget::currentTextChanged, this, &SetupWidget::SlotSelectRecipe);
+
 
 }
 
@@ -41,20 +54,25 @@ void SetupWidget::RecipeWidget()
 {
     _recipeWidget = new QWidget();
     QVBoxLayout *recipeLayout = new QVBoxLayout();
-    _recipeWidget->setLayout(recipeLayout);
+
     recipeList = new QListWidget();
+    recipeList->setAlternatingRowColors(true);
+    recipeList->setSelectionBehavior(QAbstractItemView::SelectRows);
     recipeList->setStyleSheet("QListWidget{"
                               "background-color: rgb(220, 220, 220);"
                               "font: 14pt '微软雅黑';}"
                               "QListWidget::item{"
-                              "height: 30px;}");
+                              "height: 32px;}");
 
     recipeName = new QLabel("配方名称:");
+    recipeName->setFont(QFont("微软雅黑", 12));
     newRecipe = new QLineEdit();
+    newRecipe->setAlignment(Qt::AlignHCenter);
     newRecipe->setStyleSheet("border: 1px solid #1c7ed6; \
                               min-height: 40px; \
                               border-radius: 4px; \
-                              background: white;");
+                              background: white; \
+                              font: 12pt '微软雅黑';");
     btnLoad = new QPushButton(QIcon(":/icon/ico/project/saveas.png"), "加载");
     btnLoad->setStyleSheet(_recipeBtnQSS);
     btnNew = new QPushButton(QIcon(":/icon/ico/project/new.png"), "新建");
@@ -71,11 +89,14 @@ void SetupWidget::RecipeWidget()
     recipeLayout->addWidget(btnNew);
     recipeLayout->addWidget(btnSave);
     recipeLayout->addWidget(btnDelete);
+
+    _recipeWidget->setLayout(recipeLayout);
 }
 
 void SetupWidget::IdentifyParaWidget()
 {
     _identifyParaWidget = new QWidget();
+
     QGridLayout *identifyLayout = new QGridLayout();
     identifyLayout->setColumnStretch(0, 1);
     identifyLayout->setColumnStretch(1, 1);
@@ -83,9 +104,11 @@ void SetupWidget::IdentifyParaWidget()
     identifyLayout->setColumnStretch(3, 1);
     thresholdLabel = new QLabel(QString::fromUtf8("阈值设置"));
     thresholdLabel->setFixedHeight(35);
-    thresholdVal1 = new DigitUnitFrame(QString(), true);
+    thresholdVal1 = new DigitUnitFrame(QString(), true, 0, 10000);
+    thresholdVal1->setFont(_fontYahei15);
     signTo = new QLabel("<->");
-    thresholdVal2 = new DigitUnitFrame(QString(), true);
+    thresholdVal2 = new DigitUnitFrame(QString(), true, 0, 10000);
+    thresholdVal2->setFont(_fontYahei15);
 
 
     preprocLabel = new QLabel("预处理方法");
@@ -94,41 +117,53 @@ void SetupWidget::IdentifyParaWidget()
     preprocType->addItem("开运算_方");
     preprocType->addItem("闭运算_方");
     operatorSize = new QLabel("算子尺寸");
-    operatorSizeVal = new DigitUnitFrame(QString(), true);
+    operatorSizeVal = new DigitUnitFrame(QString(), true, 0, 10000);
+    operatorSizeVal->setFont(_fontYahei15);
 
     areaSetLabel = new QLabel("面积设置");
     areaSetLabel->setFixedHeight(35);
-    areaSetVal1 = new DigitUnitFrame("Pixel", true);
+    areaSetVal1 = new DigitUnitFrame("Pixel", true, 0, 10000);
+    areaSetVal1->setFont(_fontYahei15);
     signTo1 = new QLabel("<->");
-    areaSetVal2 = new DigitUnitFrame("Pixel", true);
+    areaSetVal2 = new DigitUnitFrame("Pixel", true, 0, 10000);
+    areaSetVal2->setFont(_fontYahei15);
 
     radSetLabel = new QLabel("半径设置");
     radSetLabel->setFixedHeight(35);
-    radSetVal1 = new DigitUnitFrame("Pixel", true);
+    radSetVal1 = new DigitUnitFrame("Pixel", true, 0, 10000);
+    radSetVal1->setFont(_fontYahei15);
     signTo2 = new QLabel("<->");
-    radSetVal2 = new DigitUnitFrame("Pixel", true);
+    radSetVal2 = new DigitUnitFrame("Pixel", true, 0, 10000);
+    radSetVal2->setFont(_fontYahei15);
 
     fillSetLabel = new QLabel("填充度设置");
     fillSetLabel->setFixedHeight(35);
-    fillSetVal1 = new DigitUnitFrame(QString(), true);
+    fillSetVal1 = new DigitUnitFrame(QString(), true, 0, 10000);
+    fillSetVal1->setFont(_fontYahei15);
     signTo3 = new QLabel("<->");
-    fillSetVal2 = new DigitUnitFrame(QString(), true);
+    fillSetVal2 = new DigitUnitFrame(QString(), true, 0, 10000);
+    fillSetVal2->setFont(_fontYahei15);
 
     flawAreaSetLabel = new QLabel("残料面积");
     flawAreaSetLabel->setFixedHeight(35);
-    flawAreaSetVal1 = new DigitUnitFrame("Pixel", true);
+    flawAreaSetVal1 = new DigitUnitFrame("Pixel", true, 0, 10000);
+    flawAreaSetVal1->setFont(_fontYahei15);
     signTo4 = new QLabel("<->");
-    flawAreaSetVal2 = new DigitUnitFrame("Pixel", true);
+    flawAreaSetVal2 = new DigitUnitFrame("Pixel", true, 0, 10000);
+    flawAreaSetVal2->setFont(_fontYahei15);
 
     flawRadSetLabel = new QLabel("残料半径");
     flawRadSetLabel->setFixedHeight(35);
-    flawRadSetVal1 = new DigitUnitFrame("Pixel", true);
+    flawRadSetVal1 = new DigitUnitFrame("Pixel", true, 0, 10000);
+    flawRadSetVal1->setFont(_fontYahei15);
     signTo5 = new QLabel("<->");
-    flawRadSetVal2 = new DigitUnitFrame("Pixel", true);
+    flawRadSetVal2 = new DigitUnitFrame("Pixel", true, 0, 10000);
+    flawRadSetVal2->setFont(_fontYahei15);
 
     remnentAlertLabel = new QLabel("余料警戒");
     remnentAlertLabel->setFixedHeight(35);
-    remnentAlertVal = new DigitUnitFrame("粒", true);
+    remnentAlertVal = new DigitUnitFrame("粒", true, 0, 10000);
+    remnentAlertVal->setFont(_fontYahei15);
 
     identifyLayout->addWidget(thresholdLabel, 0, 0);
     identifyLayout->addWidget(thresholdVal1, 0, 1);
@@ -194,49 +229,49 @@ void SetupWidget::CameraParaWidget()
     QHBoxLayout *layout6 = new QHBoxLayout();
     QHBoxLayout *layout7 = new QHBoxLayout();
 
-    QLabel *plcIpLabel = new QLabel("PLC IP");
-    QLineEdit *plcIpVal = new QLineEdit();
+    plcIpLabel = new QLabel("PLC IP");
+    plcIpVal = new DigitUnitFrame(QString(), true, 0, 10000);
     layout1->addWidget(plcIpLabel);
     layout1->addWidget(plcIpVal);
 
-    QLabel *rtQtyAddrLabel = new QLabel("实时数量地址");
+    rtQtyAddrLabel = new QLabel("实时数量地址");
     QLabel *D1 = new QLabel("D");
-    QLineEdit *rtQtyAddrVal = new QLineEdit();
+    rtQtyAddrVal = new QSpinBox();
     layout2->addWidget(rtQtyAddrLabel);
     layout2->addWidget(D1);
     layout2->addWidget(rtQtyAddrVal);
 
-    QLabel *aQtyAddrLabel = new QLabel("单瓶数量地址");
+    aQtyAddrLabel = new QLabel("单瓶数量地址");
     QLabel *D2 = new QLabel("D");
-    QLineEdit *aQtyAddrVal = new QLineEdit();
+    aQtyAddrVal = new QSpinBox();
     layout3->addWidget(aQtyAddrLabel);
     layout3->addWidget(D2);
     layout3->addWidget(aQtyAddrVal);
 
-    QLabel *coorXAddrLabel = new QLabel("插料坐标X地址");
+    coorXAddrLabel = new QLabel("插料坐标X地址");
     QLabel *D3 = new QLabel("D");
-    QLineEdit *coorXAddrVal = new QLineEdit();
+    coorXAddrVal = new QSpinBox();
     layout4->addWidget(coorXAddrLabel);
     layout4->addWidget(D3);
     layout4->addWidget(coorXAddrVal);
 
-    QLabel *coorYAddrLabel = new QLabel("插料坐标Y地址");
+    coorYAddrLabel = new QLabel("插料坐标Y地址");
     QLabel *D4 = new QLabel("D");
-    QLineEdit *coorYAddrVal = new QLineEdit();
+    coorYAddrVal = new QSpinBox();
     layout5->addWidget(coorYAddrLabel);
     layout5->addWidget(D4);
     layout5->addWidget(coorYAddrVal);
 
-    QLabel *fullAddrLabel = new QLabel("满瓶信号地址");
+    fullAddrLabel = new QLabel("满瓶信号地址");
     QLabel *M1 = new QLabel("M");
-    QLineEdit *fullAddrVal = new QLineEdit();
+    fullAddrVal = new QSpinBox();
     layout6->addWidget(fullAddrLabel);
     layout6->addWidget(M1);
     layout6->addWidget(fullAddrVal);
 
-    QLabel *flawAddrLabel = new QLabel("瑕疵信号地址");
+    flawAddrLabel = new QLabel("瑕疵信号地址");
     QLabel *M2 = new QLabel("M");
-    QLineEdit *flawAddrVal = new QLineEdit();
+    flawAddrVal = new QSpinBox();
     layout7->addWidget(flawAddrLabel);
     layout7->addWidget(M2);
     layout7->addWidget(flawAddrVal);
@@ -311,13 +346,13 @@ void SetupWidget::MachineCtrlWidget()
 void SetupWidget::ElectricParaWidget()
 {
     QString btnQSS = "QPushButton{ \
-                        min-width: 200px; \
-                        min-height: 80px; \
-                        background: #adb5bd; \
-                        border-radius: 4px; \
-                        font: 14pt '微软雅黑';} \
-                    QPushButton:pressed{ \
-                        background-color: rgb(211, 211, 211);}";
+                         min-width: 200px; \
+                         min-height: 80px; \
+                         background: #adb5bd; \
+                         border-radius: 4px; \
+                         font: 14pt '微软雅黑';} \
+                     QPushButton:pressed{ \
+                         background-color: rgb(211, 211, 211);}";
 
     _electricParaWidget = new QWidget();
     QVBoxLayout *vLayout = new QVBoxLayout();
@@ -327,49 +362,78 @@ void SetupWidget::ElectricParaWidget()
     QGridLayout *gLayout2 = new QGridLayout();
     epCutTime = new QLabel("卡料时间");
     epCutTime->setFixedHeight(40);
-    epCutTimeVal = new DigitUnitFrame("ms", true);
+    epCutTimeVal = new DigitUnitFrame("ms", true, 0, 10000);
+    epCutTimeVal->setFont(_fontYahei15);
     epDropDelay = new QLabel("落料延时");
     epDropDelay->setFixedHeight(40);
-    epDropDelayVal = new DigitUnitFrame("ms", true);
+    epDropDelayVal = new DigitUnitFrame("ms", true, 0, 10000);
+    epDropDelayVal->setFont(_fontYahei15);
+
     epFillTime = new QLabel("装瓶时间");
     epFillTime->setFixedHeight(40);
-    epFillTimeVal = new DigitUnitFrame("ms", true);
+    epFillTimeVal = new DigitUnitFrame("ms", true, 0, 10000);
+    epFillTimeVal->setFont(_fontYahei15);
+
     epChangeTime = new QLabel("换瓶时间");
     epChangeTime->setFixedHeight(40);
-    epChangeTimeVal = new DigitUnitFrame("ms", true);
+    epChangeTimeVal = new DigitUnitFrame("ms", true, 0, 10000);
+    epChangeTimeVal->setFont(_fontYahei15);
+
     epFlawKickTime = new QLabel("瑕疵剔除时间");
     epFlawKickTime->setFixedHeight(40);
-    epFlawKickTimeVal = new DigitUnitFrame("ms", true);
+    epFlawKickTimeVal = new DigitUnitFrame("ms", true, 0, 10000);
+    epFlawKickTimeVal->setFont(_fontYahei15);
+
     epFlawKickDelay = new QLabel("瑕疵剔除延时");
     epFlawKickDelay->setFixedHeight(40);
-    epFlawKickDelayVal = new DigitUnitFrame("ms", true);
+    epFlawKickDelayVal = new DigitUnitFrame("ms", true, 0, 10000);
+    epFlawKickDelayVal->setFont(_fontYahei15);
+
     epShakeTime = new QLabel("抖动时间");
     epShakeTime->setFixedHeight(40);
-    epShakeTimeVal = new DigitUnitFrame("ms", true);
+    epShakeTimeVal = new DigitUnitFrame("ms", true, 0, 10000);
+    epShakeTimeVal->setFont(_fontYahei15);
+
     epBlock2Time = new QLabel("2号挡瓶时间");
     epBlock2Time->setFixedHeight(40);
-    epBlock2TimeVal = new DigitUnitFrame("ms", true);
+    epBlock2TimeVal = new DigitUnitFrame("ms", true, 0, 10000);
+    epBlock2TimeVal->setFont(_fontYahei15);
+
     epShaker1Volt = new QLabel("振动盘1电压设定");
     epShaker1Volt->setFixedHeight(40);
-    epShaker1VoltVal = new DigitUnitFrame("V", true);
+    epShaker1VoltVal = new DigitUnitFrame("V", true, 0, 10000);
+    epShaker1VoltVal->setFont(_fontYahei15);
+
     epShaker1Freq = new QLabel("振动盘1频率设定");
     epShaker1Freq->setFixedHeight(40);
-    epShaker1FreqVal = new DigitUnitFrame("Hz", true);
+    epShaker1FreqVal = new DigitUnitFrame("Hz", true, 0, 10000);
+    epShaker1FreqVal->setFont(_fontYahei15);
+
     epShaker2Volt = new QLabel("振动盘2电压设定");
     epShaker2Volt->setFixedHeight(40);
-    epShaker2VoltVal = new DigitUnitFrame("V", true);
+    epShaker2VoltVal = new DigitUnitFrame("V", true, 0, 10000);
+    epShaker2VoltVal->setFont(_fontYahei15);
+
     epShaker2Freq = new QLabel("振动盘2频率设定");
     epShaker2Freq->setFixedHeight(40);
-    epShaker2FreqVal = new DigitUnitFrame("Hz", true);
+    epShaker2FreqVal = new DigitUnitFrame("Hz", true, 0, 10000);
+    epShaker2FreqVal->setFont(_fontYahei15);
+
     epShaker3Volt = new QLabel("振动盘3电压设定");
     epShaker3Volt->setFixedHeight(40);
-    epShaker3VoltVal = new DigitUnitFrame("V", true);
+    epShaker3VoltVal = new DigitUnitFrame("V", true, 0, 10000);
+    epShaker3VoltVal->setFont(_fontYahei15);
+
     epShaker3Freq = new QLabel("振动盘3频率设定");
     epShaker3Freq->setFixedHeight(40);
-    epShaker3FreqVal = new DigitUnitFrame("Hz", true);
-    epShakerRadio = new QLabel("振动盘停止百分比");
-    epShakerRadio->setFixedHeight(40);
-    epShakerRadioVal = new DigitUnitFrame("%", true);
+    epShaker3FreqVal = new DigitUnitFrame("Hz", true, 0, 10000);
+    epShaker3FreqVal->setFont(_fontYahei15);
+
+    epStopRatio = new QLabel("振动盘停止百分比");
+    epStopRatio->setFixedHeight(40);
+    epStopRatioVal = new DigitUnitFrame("%", true, 0, 10000);
+    epStopRatioVal->setFont(_fontYahei15);
+
     motorUp = new QPushButton("电机上升");
     unLoadCylinder = new QPushButton("脱卸气缸");
     motorDown = new QPushButton("电机下降");
@@ -407,8 +471,8 @@ void SetupWidget::ElectricParaWidget()
     gLayout2->addWidget(epShaker3VoltVal, 4, 1);
     gLayout2->addWidget(epShaker3Freq, 5, 0);
     gLayout2->addWidget(epShaker3FreqVal, 5, 1);
-    gLayout2->addWidget(epShakerRadio, 6, 0);
-    gLayout2->addWidget(epShakerRadioVal, 6, 1);
+    gLayout2->addWidget(epStopRatio, 6, 0);
+    gLayout2->addWidget(epStopRatioVal, 6, 1);
 
     hLayout1->addLayout(gLayout1);
     hLayout1->addLayout(gLayout2);
@@ -472,4 +536,235 @@ void SetupWidget::OtherParaWidget()
     vLayout->addWidget(groupBox, 2);
 
     _otherParaWidget->setLayout(vLayout);
+}
+
+void promptMessage(const QString &str)
+{
+    QMessageBox msgBox;
+    msgBox.setText(str);
+    QTimer::singleShot(600, &msgBox, &QMessageBox::close);
+    msgBox.exec();
+}
+
+void SetupWidget::SlotRecipeLoad()
+{
+    if(!CheckRecipeName()) return;
+    QString filename = "config/recipe/" + newRecipe->text();
+    ReadSettingFile(filename);
+    mw->curRecipeVal->setText(newRecipe->text());
+
+    promptMessage("加载完成");
+}
+
+void SetupWidget::SlotRecipeNew()
+{
+    if(newRecipe->text().isEmpty()){
+        QMessageBox::warning(this, "名称错误", "无配方名");
+        return;
+    }
+    QString str = newRecipe->text();
+    if(TestContainRecipe(str)){
+        QMessageBox msg;
+        msg.setText("配方名重复,点击ok覆盖,cancel取消");
+        msg.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+        int ret = msg.exec();
+        if(ret == QMessageBox::Cancel) return;
+        QString filename = "config/recipe/" + str;
+        Write2SettingFile(filename);
+        newRecipe->setText(QString());
+        return;
+    }
+    QString filename = "config/recipe/" + str;
+    Write2SettingFile(filename);
+    recipeList->addItem(newRecipe->text());
+    //newRecipe->setText(QString());
+}
+
+void SetupWidget::SlotRecipeSave()
+{
+    if(!CheckRecipeName()) return;
+    QString filename = "config/recipe/" + newRecipe->text();
+    Write2SettingFile(filename);
+
+    promptMessage("保存完成");
+}
+
+void SetupWidget::SlotRecipeDel()
+{
+    if(!CheckRecipeName()) return;
+    QString filename = "config/recipe/" + newRecipe->text();
+    QFile file(filename);
+    if(file.remove()){
+        QListWidgetItem *item = recipeList->currentItem();
+        recipeList->removeItemWidget(item);
+        delete item;
+        newRecipe->setText(QString());
+
+        promptMessage("删除成功");
+    }
+}
+
+void SetupWidget::ReadSettingFile(const QString &filename)
+{
+    QSettings setting(filename, QSettings::IniFormat);
+    setting.setFallbacksEnabled(false);
+
+    mw->aBtlQtyFrame->setValue(setting.value("aBtlQty").toInt());
+    mw->shaker1Val->setValue(setting.value("shaker1").toInt());
+    mw->shaker2Val->setValue(setting.value("shaker2").toInt());
+    mw->shaker3Val->setValue(setting.value("shaker3").toInt());
+    setting.beginGroup("identify parameter");
+    thresholdVal1->setValue(setting.value("threshold_min").toInt());
+    thresholdVal2->setValue(setting.value("threshold_max").toInt());
+    preprocType->setCurrentIndex(setting.value("preprocess_index").toInt());
+    operatorSizeVal->setValue(setting.value("operator_size").toInt());
+    areaSetVal1->setValue(setting.value("area_min").toInt());
+    areaSetVal2->setValue(setting.value("area_max").toInt());
+    radSetVal1->setValue(setting.value("radius_min").toInt());
+    radSetVal2->setValue(setting.value("radius_max").toInt());
+    fillSetVal1->setValue(setting.value("fill_min").toInt());
+    fillSetVal2->setValue(setting.value("fill_max").toInt());
+    flawAreaSetVal1->setValue(setting.value("flaw_area_min").toInt());
+    flawAreaSetVal2->setValue(setting.value("flaw_area_max").toInt());
+    flawRadSetVal1->setValue(setting.value("flaw_radius_min").toInt());
+    flawRadSetVal2->setValue(setting.value("flaw_radius_max").toInt());
+    remnentAlertVal->setValue(setting.value("remnent_alert").toInt());
+    setting.endGroup();
+    setting.beginGroup("camera parameter");
+    lineFreqVal->setValue(setting.value("line_frequency").toInt());
+    gainVal->setValue(setting.value("gain").toInt());
+    expoTimeVal->setValue(setting.value("exposure_time").toInt());
+    plcIpVal->setValue(setting.value("plc_ip").toInt());
+    rtQtyAddrVal->setValue(setting.value("rt_quantity").toInt());
+    aQtyAddrVal->setValue(setting.value("one_bottle_quantity").toInt());
+    coorXAddrVal->setValue(setting.value("coordinate_x").toInt());
+    coorYAddrVal->setValue(setting.value("coordinate_y").toInt());
+    fullAddrVal->setValue(setting.value("bottle_full_signal").toInt());
+    flawAddrVal->setValue(setting.value("flaw_signal").toInt());
+    setting.endGroup();
+    setting.beginGroup("electric parameter");
+    epCutTimeVal->setValue(setting.value("cut_time").toInt());
+    epDropDelayVal->setValue(setting.value("drop_delay").toInt());
+    epFillTimeVal->setValue(setting.value("fill_time").toInt());
+    epChangeTimeVal->setValue(setting.value("change_time").toInt());
+    epFlawKickTimeVal->setValue(setting.value("flaw_kick_time").toInt());
+    epFlawKickDelayVal->setValue(setting.value("flaw_kick_delay").toInt());
+    epShakeTimeVal->setValue(setting.value("shake_time").toInt());
+    epBlock2TimeVal->setValue(setting.value("block2_time").toInt());
+    epShaker1VoltVal->setValue(setting.value("shaker1_vol").toInt());
+    epShaker1VoltVal->setValue(setting.value("shaker1_freq").toInt());
+    epShaker2VoltVal->setValue(setting.value("shaker2_vol").toInt());
+    epShaker2VoltVal->setValue(setting.value("shaker2_freq").toInt());
+    epShaker3VoltVal->setValue(setting.value("shaker3_vol").toInt());
+    epShaker3VoltVal->setValue(setting.value("shaker3_freq").toInt());
+    epStopRatioVal->setValue(setting.value("stop_ratio").toInt());
+    setting.endGroup();
+
+
+
+}
+
+void SetupWidget::Write2SettingFile(const QString &filename)
+{
+    QSettings setting(filename, QSettings::IniFormat);
+
+    setting.setValue("aBtlQty", mw->aBtlQtyFrame->value());
+    setting.setValue("shaker1", mw->shaker1Val->value());
+    setting.setValue("shaker2", mw->shaker2Val->value());
+    setting.setValue("shaker3", mw->shaker3Val->value());
+    setting.beginGroup("identify parameter");
+    setting.setValue("threshold_min", thresholdVal1->value());
+    setting.setValue("threshold_max", thresholdVal2->value());
+    setting.setValue("preprocess_index", preprocType->currentIndex());
+    setting.setValue("operator_size", operatorSizeVal->value());
+    setting.setValue("area_min", areaSetVal1->value());
+    setting.setValue("area_max", areaSetVal2->value());
+    setting.setValue("radius_min", radSetVal1->value());
+    setting.setValue("radius_max", radSetVal2->value());
+    setting.setValue("fill_min", fillSetVal1->value());
+    setting.setValue("fill_max", fillSetVal2->value());
+    setting.setValue("flaw_area_min", flawAreaSetVal1->value());
+    setting.setValue("flaw_area_max", flawAreaSetVal2->value());
+    setting.setValue("flaw_radius_min", flawRadSetVal1->value());
+    setting.setValue("flaw_radius_max", flawRadSetVal2->value());
+    setting.setValue("remnent_alert", remnentAlertVal->value());
+    setting.endGroup();
+    setting.beginGroup("camera parameter");
+    setting.setValue("line_frequency", lineFreqVal->value());
+    setting.setValue("gain", gainVal->value());
+    setting.setValue("exposure_time", expoTimeVal->value());
+    setting.setValue("plc_ip", plcIpVal->value());
+    setting.setValue("rt_quantity", rtQtyAddrVal->value());
+    setting.setValue("one_bottle_quantity", aQtyAddrVal->value());
+    setting.setValue("coordinate_x", coorXAddrVal->value());
+    setting.setValue("coordinate_y", coorYAddrVal->value());
+    setting.setValue("bottle_full_signal", fullAddrVal->value());
+    setting.setValue("flaw_signal", flawAddrVal->value());
+    setting.endGroup();
+    setting.beginGroup("electric parameter");
+    setting.setValue("cut_time", epCutTimeVal->value());
+    setting.setValue("drop_delay", epDropDelayVal->value());
+    setting.setValue("fill_time", epFillTimeVal->value());
+    setting.setValue("change_time", epChangeTimeVal->value());
+    setting.setValue("flaw_kick_time", epFlawKickTimeVal->value());
+    setting.setValue("flaw_kick_delay", epFlawKickDelayVal->value());
+    setting.setValue("shake_time", epShakeTimeVal->value());
+    setting.setValue("block2_time", epBlock2TimeVal->value());
+    setting.setValue("shaker1_vol", epShaker1VoltVal->value());
+    setting.setValue("shaker1_freq", epShaker1VoltVal->value());
+    setting.setValue("shaker2_vol", epShaker2VoltVal->value());
+    setting.setValue("shaker2_freq", epShaker2VoltVal->value());
+    setting.setValue("shaker3_vol", epShaker3VoltVal->value());
+    setting.setValue("shaker3_freq", epShaker3VoltVal->value());
+    setting.setValue("stop_ratio", epStopRatioVal->value());
+    setting.endGroup();
+
+}
+
+void SetupWidget::LoadRecipeName()
+{
+    QDir dir("config/recipe");
+    QStringList list = dir.entryList(QDir::Files);
+//    QStringList name_list;
+//    QString suffix = ".ini";
+//    for(int i = 0; i != list.count(); ++i){
+//        QString s = list[i].replace(suffix, "");
+//        name_list << s;
+//    }
+
+    recipeList->addItems(list);
+}
+
+void SetupWidget::SlotSelectRecipe(const QString &s)
+{
+    newRecipe->setText(s);
+}
+
+bool SetupWidget::TestContainRecipe(const QString& s)
+{
+    QDir dir("config/recipe/");
+    QStringList list = dir.entryList(QDir::Files);
+    for(QString &str : list){
+        if(s == str) return true;
+    }
+    return false;
+}
+
+bool SetupWidget::CheckRecipeName()
+{
+    QString str = newRecipe->text();
+    if(str.isEmpty()){
+        QMessageBox::warning(this, "名称错误", "无配方名");
+        return false;
+    }
+    if(!TestContainRecipe(str)){
+        QMessageBox::warning(this, "文件名错误", "配方文件夹中无此配方");
+        return false;
+    }
+    return true;
+}
+
+void SetupWidget::LoadRecipeParameter()
+{
+    ReadSettingFile("config/recipe/" + mw->curRecipeVal->text());
 }

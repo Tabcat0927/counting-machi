@@ -1,17 +1,27 @@
 ﻿#include "countingprocess.h"
 
-CountingProcess::CountingProcess(QObject *parent) : QObject(parent)
+CountingProcess::CountingProcess(MainWidget *mw, SetupWidget *sw, QObject *parent) :
+                 QObject(parent), mw(mw), sw(sw)
 {
-    mainWidget = new MainWidget();
-    setupWidget = new SetupWidget();
+    grainCnt = 0;
+    oneBottleNum = mw->aBtlQtyFrame->value();
+    cntSpeed = 0;
+    fillBottleSpeed = 0;
+    filledCnt = 0;
     showImageCnt = 0;
     showImageNum = 6;
+    haveBottle = false;
+    excessWarn = false;
+    isFlaw = false;
+    isBottleFull = false;
+    isDoubleRemove = false;
+    isCameraConnect = false;
     isCountStop = true;
     beginStudy = false;
-    oneBottleNum = mainWidget->aBtlQtyFrame->value();
+
+    oneBottleNum = mw->aBtlQtyFrame->value();
     for(int i = 0; i != 8; ++i) tubeCnt[i] = 0;
     for(int i = 0; i != 9; ++i) tubeEdge[i] = 1640 / 8 * i;
-
 //    下面俩会导致QObject::startTimer: Timers cannot be started from another thread
 //    不知道为啥，放到mainwindow里，信号和槽不在一个类内可以，后面再研究
 //    connect(this, &CountingProcess::SignalShowImage, this, &CountingProcess::SlotShowImage);
@@ -22,10 +32,9 @@ CountingProcess::CountingProcess(QObject *parent) : QObject(parent)
 
 void CountingProcess::Count()
 {
-    while (!isCountStop){
-        timerSecond.start();
-        timerMinute.start();
-        QElapsedTimer time1;
+    timerSecond.start();
+    timerMinute.start();
+    while (!isCountStop){    
         QDir imageDir = QDir("111-1");
         QStringList fileName = imageDir.entryList(QDir::Files);
         int cnt = fileName.count();
@@ -47,8 +56,6 @@ void CountingProcess::Count()
             if(blobs.outRegions.size() > 0){
                 DrawMainWindowImage();
                 DealwithBlobs(blobs);
-                KickoutDouble();
-                OtherThings(time1);
             }
             else free(_imageUp.data);
             Sleep(5);
@@ -161,8 +168,8 @@ void CountingProcess::ProcessTiledImage(XVImage &tiled_image, XVSplitRegionToBlo
 
     XVThresholdImageToRegionMonoIn thre_in;
     XVThresholdImageToRegionMonoOut thre_out;
-    int minThreshold = setupWidget->thresholdVal1->value();
-    int maxThreshold = setupWidget->thresholdVal2->value();
+    int minThreshold = sw->thresholdVal1->value();
+    int maxThreshold = sw->thresholdVal2->value();
     thre_in.inImage = &tiled_image;
     thre_in.inMin = minThreshold;
     thre_in.inMax = maxThreshold;
@@ -176,7 +183,7 @@ void CountingProcess::ProcessTiledImage(XVImage &tiled_image, XVSplitRegionToBlo
     morph_in.inRegion = thre_out.outRegion;
     morph_in.inRadiusX = 1;
     morph_in.inRadiusY = 1;
-    int index = setupWidget->preprocType->currentIndex();
+    int index = sw->preprocType->currentIndex();
     switch (index)
     {
     case 0:
@@ -214,7 +221,7 @@ void CountingProcess::DealwithBlobs(XVSplitRegionToBlobsOut &blobs)
             PaintXVRegion(reg, _imageDown, 20);
             continue;
         }
-        if(mainWidget->isStudy){
+        if(mw->isStudy){
             beginStudy = true;
             studyRegion.append(reg);
 
@@ -223,13 +230,146 @@ void CountingProcess::DealwithBlobs(XVSplitRegionToBlobsOut &blobs)
                 emit SignalStudy(studyRegion);
             }
         }
-        else if(beginStudy && !mainWidget->isStudy && studyRegion.count() < 1100){
+        else if(beginStudy && !mw->isStudy && studyRegion.count() < 1100){
             Log::Instance()->writeWarn("学习数据失败, 数据量太少");
             studyRegion.clear();
             beginStudy = false;
         }
-        else CountUndCommunication(reg);
+        else{
+            CountUndCommunication(reg);
+            emit SignalCountChanged(grainCnt, cntSpeed, fillBottleSpeed, filledCnt);
+            if(grainCnt >= oneBottleNum){
+                isBottleFull = true;
+                grainCnt = 0;
+                ++fillBottleSpeed;
+                ++filledCnt;
+            }
+        }
+        if(timerSecond.elapsed() >= 1000){
+            cntSpeed = 0;
+            timerSecond.start();
+        }
+        if(timerMinute.elapsed() >= 60000){
+            fillBottleSpeed = 0;
+            timerMinute.start();
+        }
     }
+}
+
+void CountingProcess::CountUndCommunication(XVRegion &reg)
+{
+    int n_untop = 0;
+    uint16_t row[20] = {0};
+    uint16_t column[20] = {0};
+    int area = GetXVRegionArea(reg);
+    int rad = GetXVRegionRadius(reg);
+
+//    qDebug() << area << "   area";
+//    qDebug() << rad<< "   rad";
+    if(BolbInNormalRange(area,rad)){
+        ++grainCnt;
+        ++cntSpeed;
+
+        XVRegionBoundingRectIn bound_in;
+        XVRegionBoundingRectOut bound_out;
+        bound_in.inRegion = reg;
+        XVRegionBoundingRect(bound_in, bound_out);
+        row[n_untop] = bound_out.outCenter.x;
+        column[n_untop] = bound_out.outRightDown.y;
+        for (int i = 0; i < 8; ++i){
+            if(row[n_untop] > tubeEdge[i] && row[n_untop] < tubeEdge[i + 1]){
+                tubeCnt[i] ++;
+            }
+        }
+        //n_untop is definitely incorrect,latter to deal with
+        n_untop++;
+    }
+    else HandleAbnormal(area, rad);
+    CommunicateWithPLC();
+}
+
+void CountingProcess::CommunicateWithPLC()
+{
+//    if(mt->modbus_state == true && mt->isModbusMdu == false && mt->isModbusMain == false)
+//    {
+//        mt->isModbusCount = true;
+//        modbus_write_registers(mt->modbus, insertCoordXAddr + n_untop, 1, &row[n_untop]);
+//        modbus_write_registers(mt->modbus, insertCoordYAddr + n_untop, 1, &column[n_untop]);
+//        modbus_write_registers(mt->modbus, insertCoordYAddr + n_untop + 1, 20 - n_untop, &clear[n_untop]);
+//        modbus_write_registers(mt->modbus, insertCoordXAddr + n_untop + 1, 20 - n_untop, &clear[n_untop]);
+//        modbus_write_register(mt->modbus, 3, n_untop + 1);
+//        modbus_write_bit(mt->modbus, 1000, 1);
+//        modbus_write_register(mt->modbus, currentNumAddr, grainCnt);
+//        mt->isModbusCount = false;
+//        if(isBottleFull) modbus_write_bit(mt->modbus, fullSignalAddr, isBottleFull);
+//        if(isFlaw) modbus_write_bit(mt->modbus, flawSignalAddr, isFlaw);
+//        if(isDoubleRemove) modbus_write_bit(mt->modbus, 330, isDoubleRemove);
+//        uint16_t d62[1];
+//        modbus_read_registers(mt->modbus,62,1,&d62[0]);
+//        bottleSpeed = (int)d62[0];
+//        runtime = timer.elapsed();
+//        if(setRuntimeValue > runtime){
+//          Sleep(setRuntimeValue - runtime);
+//        }
+//        isFlaw = false;
+//        isBottleFull = false;
+//        isDoubleRemove =false;
+//        mt->isModbusCount = false;
+//    }
+}
+
+void CountingProcess::HandleAbnormal(int area, int rad)
+{
+    KickoutDouble();
+    if(BolbInFlawRange(area, rad)){
+        isFlaw = true;
+        Log::Instance()->writeWarn("残料警告,面积= " +
+        QString::number(area) + "(" +
+        QString::number(sw->flawAreaSetVal1->value()) + "," +
+        QString::number(sw->flawAreaSetVal2->value())  + ")" + "，半径= " +
+        QString::number(rad) + "(" +
+        QString::number(sw->flawRadSetVal1->value()) + "," +
+        QString::number(sw->flawRadSetVal2->value()) + ")");
+    }
+    else Log::Instance()->writeWarn("出现未计入数据的阴影，面积= " +
+        QString::number(area)+ "(" +
+        QString::number(sw->areaSetVal1->value()) + "," +
+        QString::number(sw->areaSetVal2->value()) + ")" + "，半径= " +
+        QString::number(rad) + "(" +
+        QString::number(sw->radSetVal1->value()) + "," +
+        QString::number(sw->radSetVal2->value()) + ")");
+}
+
+void CountingProcess::KickoutDouble()
+{
+    int restWarn = sw->remnentAlertVal->value();
+    for (int i = 0; i < 9; ++i){
+        if(oneBottleNum - grainCnt <= restWarn && tubeCnt[i] > 1){
+            isDoubleRemove = true;
+            Log::Instance()->writeWarn("剔除警告：第" + QString::number(i + 1) +
+                                       "料道出现叠料,数目为：" +
+                                       QString::number(tubeCnt[i]) + "粒");
+            tubeCnt[i] = 0;
+        }
+    }
+}
+
+bool CountingProcess::BolbInNormalRange(int area, int rad)
+{
+    if(area < sw->areaSetVal1->value()) return false;
+    if(area > sw->areaSetVal2->value()) return false;
+    if(rad < sw->radSetVal1->value()) return false;
+    if(rad > sw->radSetVal2->value()) return false;
+    return true;
+}
+
+bool CountingProcess::BolbInFlawRange(int area, int rad)
+{
+    if(area < sw->flawAreaSetVal1->value()) return false;
+    if(area > sw->flawAreaSetVal2->value()) return false;
+    if(rad < sw->flawRadSetVal1->value()) return false;
+    if(rad > sw->flawRadSetVal2->value()) return false;
+    return true;
 }
 
 bool CountingProcess::TestRegionIntersection(XVRegion &reg1, XVRegion &reg2)
@@ -241,20 +381,6 @@ bool CountingProcess::TestRegionIntersection(XVRegion &reg1, XVRegion &reg2)
     XVRegionIntersection(in, out);
 
     return out.outRegion.frameWidth > 0 ? true : false;
-}
-
-void CountingProcess::KickoutDouble()
-{
-    int restWarn = setupWidget->remnentAlertVal->value();
-    for (int i = 0; i < 9; ++i){
-        if(oneBottleNum - grainCnt <= restWarn && tubeCnt[i] > 1){
-            isDoubleRemove = true;
-            Log::Instance()->writeWarn("剔除警告：第 " + QString::number(i + 1) +
-                                       "料道出现叠料,数目为：" +
-                                       QString::number(tubeCnt[i]) + "粒");
-            tubeCnt[i] = 0;
-        }
-    }
 }
 
 void CountingProcess::DrawMainWindowImage()
@@ -295,61 +421,6 @@ XVImage CountingProcess::CropXVImage(XVImage &image)
     copy_in.alignment.optional = XVOptionalType::NUL;
     XVCopyAndFill(copy_in, copy_out);
     return copy_out.outImage;
-}
-
-void CountingProcess::OtherThings(QElapsedTimer& timer)
-{
-    if(grainCnt >= oneBottleNum && !mainWidget->isStudy)
-    {
-        //grainCnt = grainCnt - oneBottleNum;
-        ++fillBottleSpeed;
-    }
-//    if(!mainWidget->isStudy && mt->modbus_state == true && mt->isModbusMdu == false && mt->isModbusMain == false)
-//    {
-//        mt->isModbusCount = true;
-//        modbus_write_register(mt->modbus, currentNumAddr, grainCnt);
-//        mt->isModbusCount = false;
-//    }
-
-//    if(isSaveImage)
-//    {
-//        wImage.enqueue(hImageShow);
-//        wCount.enqueue(grainCnt);
-//        wSortRegionNumS.enqueue(countTemS);
-//        countTem = 0;
-//        countTemS = 0;
-//    }
-//    if(!mainWidget->isStudy && grainCnt >= oneBottleNum && mt->modbus_state == true){
-//        if(mt->isModbusMdu == false && mt->isModbusMain == false){
-//            mt->isModbusCount = true;
-//            modbus_write_bit(mt->modbus, fullSignalAddr, 1);
-//            modbus_write_bit(mt->modbus, flawSignalAddr, isFlaw);
-//            if(isDoubleRemove == true){
-//                modbus_write_bit(mt->modbus, 330, isDoubleRemove);
-//            }
-//            uint16_t d62[1];
-//            modbus_read_registers(mt->modbus,62,1,&d62[0]);
-//            bottleSpeed = (int)d62[0];
-
-//            if(setRuntimeValue > runtime){
-//                Sleep(setRuntimeValue - runtime);
-//            }
-//            runtime = timer.elapsed();
-//            isFlaw = false;
-//            mt->isModbusCount = false;
-//            isDoubleRemove =false;
-//        }
-//    }
-    if(timerSecond.elapsed() >= 1000){
-        mainWidget->cntSpdFrame->setValue(cntSpeed);
-        cntSpeed = 0;
-        timerSecond.start();
-    }
-    if(timerMinute.elapsed() >= 60000){
-        mainWidget->fillSpdFrame->setValue(fillBottleSpeed);
-        fillBottleSpeed = 0;
-        timerMinute.start();
-    }
 }
 
 bool CountingProcess::MirrorXVImage(XVImage &in, XVImage *out)
@@ -399,78 +470,6 @@ XVRegion CountingProcess::CreateRectXVRegion(int width, int height)
     return rect_out.outRegion;
 }
 
-void CountingProcess::CountUndCommunication(XVRegion &reg)
-{
-    int n_untop = 0;
-    uint16_t row[20] = {0};
-    uint16_t column[20] = {0};
-    uint16_t clear[20] = {0};
-    int area = GetXVRegionArea(reg);
-    int rad = GetXVRegionRadius(reg);
-    int minArea = setupWidget->areaSetVal1->value();
-    int maxArea = setupWidget->areaSetVal2->value();
-    int minRadius = setupWidget->radSetVal1->value();
-    int maxRadius = setupWidget->radSetVal2->value();
-    int minFlawArea = setupWidget->flawAreaSetVal1->value();
-    int maxFlawArea = setupWidget->flawAreaSetVal2->value();
-    int minFlawRadius = setupWidget->flawRadSetVal1->value();
-    int maxFlawRadius = setupWidget->flawRadSetVal2->value();
-
-    if((area >= minArea && area <= maxArea) &&
-       (rad >= minRadius && rad <= maxRadius)){
-        if(!mainWidget->isStudy){
-            ++grainCnt;
-            ++cntSpeed;
-
-            XVRegionBoundingRectIn bound_in;
-            XVRegionBoundingRectOut bound_out;
-            bound_in.inRegion = reg;
-            XVRegionBoundingRect(bound_in, bound_out);
-
-            //need to check
-            row[n_untop] = bound_out.outCenter.x;
-            column[n_untop] = bound_out.outRightDown.y;
-
-            for (int i = 0; i < 8; ++i){
-                if(row[n_untop] > tubeEdge[i] && row[n_untop] < tubeEdge[i + 1]){
-                    tubeCnt[i] ++;
-                }
-            }
-//            if(!mainWidget->isStudy && mt->modbus_state == true && mt->isModbusMdu == false && mt->isModbusMain == false)
-//            {
-//                mt->isModbusCount = true;
-//                modbus_write_registers(mt->modbus, insertCoordXAddr + n_untop, 1, &row[n_untop]);
-//                modbus_write_registers(mt->modbus, insertCoordYAddr + n_untop, 1, &column[n_untop]);
-//                modbus_write_registers(mt->modbus, insertCoordYAddr + n_untop + 1, 20 - n_untop, &clear[n_untop]);
-//                modbus_write_registers(mt->modbus, insertCoordXAddr + n_untop + 1, 20 - n_untop, &clear[n_untop]);
-//                modbus_write_register(mt->modbus, 3, n_untop + 1);
-//                modbus_write_bit(mt->modbus, 1000, 1);
-//                mt->isModbusCount = false;
-//            }
-            n_untop++;
-        }
-    }
-//    else Log::Instance()->writeWarn("出现未计入数据的阴影，面积= " +
-//                                    QString::number(area)+ "(" +
-//                                    QString::number(minArea) + "," +
-//                                    QString::number(maxArea) + ")" + "，半径= " +
-//                                    QString::number(rad) + "(" +
-//                                    QString::number(minRadius) + "," +
-//                                    QString::number(maxRadius) + ")");
-//    if((area < maxFlawArea && area > minFlawArea) ||
-//       (rad < maxFlawRadius && rad > minFlawRadius) ||
-//       ((area > maxArea) || (rad  > maxRadius))){
-//        isFlaw = true;
-//        Log::Instance()->writeWarn("残料警告,面积= " +
-//                                   QString::number(area) + "(" +
-//                                   QString::number(minFlawArea) + "," +
-//                                   QString::number(maxFlawArea)  + ")" + "，半径= " +
-//                                   QString::number(rad) + "(" +
-//                                   QString::number(minFlawRadius) + "," +
-//                                   QString::number(maxFlawRadius) + ")");
-//    }
-}
-
 int CountingProcess::GetXVRegionArea(XVRegion &region)
 {
     XVRegionAreaIn area_in;
@@ -496,15 +495,15 @@ void CountingProcess::Sleep(int t)
     QElapsedTimer *timer = new QElapsedTimer();
     timer->start();
     while(!timer->hasExpired(t)){};
+
 }
 
 void CountingProcess::SlotShowImage(QImage &img)
 {
-    VisionGraph *vg = mainWidget->vgShowImage;
+    VisionGraph *vg = mw->vgShowImage;
     vg->clearPainter();
     vg->setBkImg(img);
     vg->setViewSize_Fit();
-
 }
 
 void CountingProcess::SlotStudy()
@@ -526,8 +525,8 @@ void CountingProcess::SlotStudy()
 
     grainDataLearn(learnAreaInArea, learnAreaOut);
     if(learnAreaOut.GrainDataLearnResult == 1){
-        setupWidget->areaSetVal1->setValue((int)learnAreaOut.minThreshold);
-        setupWidget->areaSetVal2->setValue((int)learnAreaOut.maxThreshold);
+        sw->areaSetVal1->setValue((int)learnAreaOut.minThreshold);
+        sw->areaSetVal2->setValue((int)learnAreaOut.maxThreshold);
         Log::Instance()->writeInfo("学习算法结果面积最大值 = " + QString("%1").arg(learnAreaOut.maxThreshold));
         Log::Instance()->writeInfo("学习算法结果面积最小值 = " + QString("%1").arg(learnAreaOut.minThreshold));
     }
@@ -535,14 +534,14 @@ void CountingProcess::SlotStudy()
 
     grainDataLearn(learnAreaInRadius, learnAreaOut);
     if(learnAreaOut.GrainDataLearnResult == 1){
-        setupWidget->radSetVal1->setValue((int)learnAreaOut.minThreshold);
-        setupWidget->radSetVal1->setValue((int)learnAreaOut.maxThreshold);
+        sw->radSetVal1->setValue((int)learnAreaOut.minThreshold);
+        sw->radSetVal1->setValue((int)learnAreaOut.maxThreshold);
         Log::Instance()->writeInfo("学习算法结果半径最大值 = " + QString("%1").arg(learnAreaOut.minThreshold));
         Log::Instance()->writeInfo("学习算法结果半径最小值 = " + QString("%1").arg(learnAreaOut.maxThreshold));
         Log::Instance()->writeInfo("***********学习成功***********");
     }
     else Log::Instance()->writeWarn("学习数据失败");
     studyRegion.clear();
-    mainWidget->ctrlStudy->setChecked(false);
+    mw->ctrlStudy->setChecked(false);
     beginStudy = false;
 }

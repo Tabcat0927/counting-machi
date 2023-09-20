@@ -11,6 +11,8 @@
 #include <QTextCodec>
 #include <QDebug>
 #include <QThread>
+#include <QSettings>
+#include <QDir>
 
 #include "xvlog.h"
 #include "xvlogwidget.h"
@@ -28,7 +30,13 @@ public:
 
     void CreateToolBar();
     void LoginWidget();
+    int GetXVRegionArea(XVRegion&);
+    float GetXVRegionRadius(XVRegion&);
 
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
+    
 public:
     QToolBar    *toolBar;
     QAction     *userLogin;
@@ -38,11 +46,11 @@ public:
     QAction     *logAction;
     QAction     *closeProg;
     QStackedWidget   *stackedWidget;
-//    MainWidget    *mainWidget;
-//    SetupWidget      *setupWidget;
+    MainWidget    *mainWidget;
+    SetupWidget      *setupWidget;
     QDialog     *loginDialog;
     XVLogWidget   *logWidget;
-    CountingProcess *cntProc;
+    CountingProcess *countProc;
 
 private:
     QThread   countThread;
@@ -58,8 +66,8 @@ public slots:
     void logActionTriggered();
     void SlotShowImage(QImage);
     void SlotStudy(QVector<XVRegion>);
-    int GetXVRegionArea(XVRegion&);
-    float GetXVRegionRadius(XVRegion&);
+    void Write2SysSettingFile(const QString&);
+    void SlotCountChanged(int, int, int, int);
 
 };
 #endif // MAINWINDOW_H

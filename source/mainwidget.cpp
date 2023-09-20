@@ -11,6 +11,7 @@ MainWidget::MainWidget(QWidget *parent) : QWidget(parent)
 
     CreateUi();
     SetStyleSheet();
+    ReadSysSettingFile("config/system/sys");
 
     connect(ctrlStudy, &QPushButton::toggled, this, &MainWidget::CtrlStudyToggled);
 }
@@ -26,10 +27,17 @@ void MainWidget::CreateUi()
     RunStatusWidget();
     RunControlWidget();
 
-    QVBoxLayout *rightLayout = new QVBoxLayout();
-    QLabel *curRecipe = new QLabel("当前配方：");
+    curRecipe = new QLabel("当前配方：");
+    curRecipeVal = new QLabel();
     curRecipe->setFont(_fontYahei15);
-    rightLayout->addWidget(curRecipe);
+    curRecipeVal->setFont(_fontYahei15);
+    QHBoxLayout *hlayout = new QHBoxLayout();
+    hlayout->addWidget(curRecipe);
+    hlayout->addWidget(curRecipeVal, 1);
+
+    QVBoxLayout *rightLayout = new QVBoxLayout();
+
+    rightLayout->addLayout(hlayout);
     rightLayout->addWidget(_statusWidget, 1);
     rightLayout->addWidget(_controlWidget, 1);
 
@@ -56,46 +64,44 @@ void MainWidget::RunStatusWidget()
     //当前数量current quantity
     curQtyText = new QLabel("当前数量");
     curQtyText->setFont(_fontYahei15);
-    curQtyFrame = new DigitUnitFrame("粒", false);
+    curQtyFrame = new DigitUnitFrame("粒", false, 0, 10000);
     curQtyFrame->setFont(_fontYahei15);
     curQtyFrame->setHeight(45);
 
     //单瓶数量single bottle quantity
     aBtlQtyText = new QLabel("单瓶数量");
     aBtlQtyText->setFont(_fontYahei15);
-    aBtlQtyFrame = new DigitUnitFrame("粒/瓶", true);
+    aBtlQtyFrame = new DigitUnitFrame("粒/瓶", true, 0, 10000);
     aBtlQtyFrame->setFont(_fontYahei15);
     aBtlQtyFrame->setHeight(45);
 
     //计数速度
     cntSpdText = new QLabel("计数速度");
     cntSpdText->setFont(_fontYahei15);
-    cntSpdFrame = new DigitUnitFrame("粒/秒", false);
+    cntSpdFrame = new DigitUnitFrame("粒/秒", false, 0, 10000);
     cntSpdFrame->setFont(_fontYahei15);
     cntSpdFrame->setHeight(45);
 
     //装瓶速度
     fillSpdText = new QLabel("装瓶速度");
     fillSpdText->setFont(_fontYahei15);
-    fillSpdFrame = new DigitUnitFrame("瓶/分", false);
+    fillSpdFrame = new DigitUnitFrame("瓶/分", false, 0, 10000);
     fillSpdFrame->setFont(_fontYahei15);
     fillSpdFrame->setHeight(45);
 
     //已装瓶数量
     fillQtyText = new QLabel("已装瓶数量");
     fillQtyText->setFont(_fontYahei15);
-    fillQtyFrame = new DigitUnitFrame("瓶", false);
+    fillQtyFrame = new DigitUnitFrame("瓶", false, 0, 10000);
     fillQtyFrame->setFont(_fontYahei15);
     fillQtyFrame->setHeight(45);
 
     //进度条
-    QProgressBar *progBar = new QProgressBar();
+    progBar = new QProgressBar();
     progBar->setMinimumHeight(45);
-
 
     //清零1
     clrBtn1 = new QPushButton("清零");
-
 
     //有瓶信号
     QFrame *haveBtlFrame = new QFrame();
@@ -159,13 +165,13 @@ void MainWidget::RunControlWidget()
     ctrlSave = new QPushButton("保存图片");
     ctrlBelt = new QPushButton("传送带");
 
-    shaker1Val = new DigitUnitFrame("V", true);
+    shaker1Val = new DigitUnitFrame("V", true, 0, 10000);
     shaker1Val->setFixedHeight(40);
     shaker1Val->setFont(_fontYahei15);
-    shaker2Val = new DigitUnitFrame("V", true);
+    shaker2Val = new DigitUnitFrame("V", true, 0, 10000);
     shaker2Val->setFixedHeight(40);
     shaker2Val->setFont(_fontYahei15);
-    shaker3Val = new DigitUnitFrame("V", true);
+    shaker3Val = new DigitUnitFrame("V", true, 0, 10000);
     shaker3Val->setFixedHeight(40);
     shaker3Val->setFont(_fontYahei15);
 
@@ -292,3 +298,13 @@ void MainWidget::CtrlStudyToggled(bool checked)
 {
     isStudy = checked;
 }
+
+void MainWidget::ReadSysSettingFile(const QString& filename)
+{
+    QSettings setting(filename, QSettings::IniFormat);
+    setting.setFallbacksEnabled(false);
+    curRecipeVal->setText(setting.value("curRecipe").toString());
+}
+
+
+

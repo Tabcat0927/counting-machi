@@ -1,0 +1,21 @@
+Exceptions:
+Exception Code :c0000005 ACCESS_VIOLATION(¶ÁÐ´·Ç·¨ÄÚ´æ)
+Fault address:  6164A40D 01:000D940D D:\Qt\Qt5.14.2\5.14.2\msvc2017\bin\Qt5Gui.dll
+
+Registers:
+EAX:00000000
+EBX:00000004
+ECX:00000000
+EDX:05B4C680
+ESI:00000000
+EDI:0053BF9C
+CS:EIP:0023:6164A40D
+SS:ESP:002B:0053B994  EBP:00000001
+DS:002B  ES:002B  FS:0053  GS:002B
+Flags:00010246
+
+Show CallStack:
+Call SymGetLineFromAddr64 ,Address 6164a40d Error:00000000
+Call SymGetLineFromAddr64 ,Address 649416c4 Error:00000000
+Call SymGetLineFromAddr64 ,Address 671a2ab0 Error:00000000
+Call SymGetLineFromAddr64 ,Address 617a62cd Error:00000000

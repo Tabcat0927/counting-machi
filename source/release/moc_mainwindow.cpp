@@ -23,8 +23,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_MainWindow_t {
-    QByteArrayData data[13];
-    char stringdata0[178];
+    QByteArrayData data[12];
+    char stringdata0[172];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -43,16 +43,15 @@ QT_MOC_LITERAL(6, 73, 18), // "logActionTriggered"
 QT_MOC_LITERAL(7, 92, 13), // "SlotShowImage"
 QT_MOC_LITERAL(8, 106, 9), // "SlotStudy"
 QT_MOC_LITERAL(9, 116, 17), // "QVector<XVRegion>"
-QT_MOC_LITERAL(10, 134, 15), // "GetXVRegionArea"
-QT_MOC_LITERAL(11, 150, 9), // "XVRegion&"
-QT_MOC_LITERAL(12, 160, 17) // "GetXVRegionRadius"
+QT_MOC_LITERAL(10, 134, 20), // "Write2SysSettingFile"
+QT_MOC_LITERAL(11, 155, 16) // "SlotCountChanged"
 
     },
     "MainWindow\0userLoginToggled\0\0setUpTriggerd\0"
     "runProgToggled\0minWinTriggerd\0"
     "logActionTriggered\0SlotShowImage\0"
-    "SlotStudy\0QVector<XVRegion>\0GetXVRegionArea\0"
-    "XVRegion&\0GetXVRegionRadius"
+    "SlotStudy\0QVector<XVRegion>\0"
+    "Write2SysSettingFile\0SlotCountChanged"
 };
 #undef QT_MOC_LITERAL
 
@@ -78,7 +77,7 @@ static const uint qt_meta_data_MainWindow[] = {
        7,    1,   68,    2, 0x0a /* Public */,
        8,    1,   71,    2, 0x0a /* Public */,
       10,    1,   74,    2, 0x0a /* Public */,
-      12,    1,   77,    2, 0x0a /* Public */,
+      11,    4,   77,    2, 0x0a /* Public */,
 
  // slots: parameters
     QMetaType::Void, QMetaType::Bool,    2,
@@ -88,8 +87,8 @@ static const uint qt_meta_data_MainWindow[] = {
     QMetaType::Void,
     QMetaType::Void, QMetaType::QImage,    2,
     QMetaType::Void, 0x80000000 | 9,    2,
-    QMetaType::Int, 0x80000000 | 11,    2,
-    QMetaType::Float, 0x80000000 | 11,    2,
+    QMetaType::Void, QMetaType::QString,    2,
+    QMetaType::Void, QMetaType::Int, QMetaType::Int, QMetaType::Int, QMetaType::Int,    2,    2,    2,    2,
 
        0        // eod
 };
@@ -107,10 +106,8 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 4: _t->logActionTriggered(); break;
         case 5: _t->SlotShowImage((*reinterpret_cast< QImage(*)>(_a[1]))); break;
         case 6: _t->SlotStudy((*reinterpret_cast< QVector<XVRegion>(*)>(_a[1]))); break;
-        case 7: { int _r = _t->GetXVRegionArea((*reinterpret_cast< XVRegion(*)>(_a[1])));
-            if (_a[0]) *reinterpret_cast< int*>(_a[0]) = std::move(_r); }  break;
-        case 8: { float _r = _t->GetXVRegionRadius((*reinterpret_cast< XVRegion(*)>(_a[1])));
-            if (_a[0]) *reinterpret_cast< float*>(_a[0]) = std::move(_r); }  break;
+        case 7: _t->Write2SysSettingFile((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 8: _t->SlotCountChanged((*reinterpret_cast< int(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2])),(*reinterpret_cast< int(*)>(_a[3])),(*reinterpret_cast< int(*)>(_a[4]))); break;
         default: ;
         }
     }

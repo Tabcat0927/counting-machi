@@ -9,16 +9,17 @@
 #include <QFont>
 #include <QIntValidator>
 #include <QSpinBox>
+#include <QFont>
 
 class DigitUnitFrame : public QFrame
 {
     Q_OBJECT
 public:
-    DigitUnitFrame(QString unit, bool isEditable);
-    void setFont(QFont);
-    void setHeight(int);
+    DigitUnitFrame(QString, bool, int, int);
+    void setFont(const QFont);
+    void setHeight(const int);
     int value();
-    void setValue(int);
+    void setValue(const int);
 
 private:
     QLabel      *_unit;
