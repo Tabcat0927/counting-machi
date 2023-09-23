@@ -7,9 +7,11 @@
 #include <QApplication>
 #include <QDebug>
 #include <QElapsedTimer>
-#include <QTime>
+#include <QTimer>
 #include <QEventLoop>
 #include <QThread>
+#include <QMutexLocker>
+#include <QMutex>
 
 #include "BlobAnalysis.h"
 #include "CountGrain.h"
@@ -17,6 +19,7 @@
 #include "setupwidget.h"
 #include "mainwidget.h"
 #include "xvlogwidget.h"
+#include "modbus.h"
 
 
 using namespace XVL;
@@ -25,13 +28,14 @@ class CountingProcess : public QObject
 {
     Q_OBJECT
 public:
-    explicit CountingProcess(MainWidget *mw, SetupWidget *sw, QObject *parent = nullptr);
+    explicit CountingProcess(MainWidget *mw, SetupWidget *sw);
 
     void Sleep(int);
     int GetXVRegionArea(XVRegion&);
     float GetXVRegionRadius(XVRegion&);
 
 public:
+
     MainWidget    *mw;
     SetupWidget   *sw;
     int           showImageNum;
@@ -49,12 +53,13 @@ public:
     bool          isCameraConnect;
     bool          isCountStop;
     bool          beginStudy;
-
+    bool          isModbusConnect;
     int           tubeCnt[8];
     int           tubeEdge[9];
 
     QElapsedTimer timerSecond;
     QElapsedTimer timerMinute;
+    QElapsedTimer timerRun;
     QVector<XVRegion> studyRegion;
 
 public slots:
@@ -72,6 +77,7 @@ private:
     int            wid, hei;
     QImage         in_img;
     vector<XVImage> _vecImage;
+
 
 private:
     void CreateXVImage(int, int, uchar*, XVImage*);
@@ -93,7 +99,7 @@ private:
     void CommunicateWithPLC();
     void HandleAbnormal(int, int);
     bool BolbInNormalRange(int, int);
-    bool BolbInFlawRange(int, int);
+    bool BolbInFlawRange(int, int);    
 
 };
 

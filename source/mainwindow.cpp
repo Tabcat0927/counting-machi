@@ -1,5 +1,7 @@
 ﻿#include "mainwindow.h"
 
+modbus_t *ctx;
+QMutex   mutexModbus;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -9,9 +11,9 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowIcon(QIcon(":/icon/ico/ivision.ico"));
     CreateToolBar();
     stackedWidget  = new QStackedWidget();
-    mainWidget = new MainWidget();
-    setupWidget = new SetupWidget(mainWidget);
-    logWidget = new XVLogWidget(QString());
+    mainWidget = new MainWidget(this);
+    setupWidget = new SetupWidget(mainWidget, this);
+    logWidget = new XVLogWidget(QString(), this);
     stackedWidget->addWidget(mainWidget);
     stackedWidget->addWidget(setupWidget);
     stackedWidget->addWidget(logWidget);
@@ -21,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent)
     loginDialog = new QDialog(this);
     LoginWidget();
 
-    //func    
+    //func
     countProc = new CountingProcess(mainWidget, setupWidget);
     countProc->moveToThread(&countThread);
     connect(&countThread, &QThread::started, countProc, &CountingProcess::Count);
@@ -29,16 +31,19 @@ MainWindow::MainWindow(QWidget *parent)
     connect(countProc, &CountingProcess::SignalStudy, this, &MainWindow::SlotStudy);
     connect(countProc, &CountingProcess::SignalCountChanged, this, &MainWindow::SlotCountChanged);
 
+    QTimer *timer = new QTimer(this);
+    ctx = nullptr;
+    connect(timer, &QTimer::timeout, this, &MainWindow::CreateUndCheckModbus);
+    timer->start(10000);
 }
 
 MainWindow::~MainWindow()
 {
-    delete mainWidget;
-    delete setupWidget;
-    delete logWidget;
-    delete countProc;
     countThread.quit();
     countThread.wait();
+    if(countProc->isModbusConnect) modbus_free(ctx);
+    delete countProc;
+
 }
 
 void MainWindow::CreateToolBar()
@@ -244,6 +249,7 @@ void MainWindow::Write2SysSettingFile(const QString &filename)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    countProc->isCountStop = true;
     Write2SysSettingFile("config/system/sys");
     event->accept();
 }
@@ -255,4 +261,24 @@ void MainWindow::SlotCountChanged(int val1, int val2, int val3, int val4)
     mainWidget->fillSpdFrame->setValue(val3);
     mainWidget->fillQtyFrame->setValue(val4);
     mainWidget->progBar->setValue(val1 * 100 / mainWidget->aBtlQtyFrame->value());
+}
+
+void MainWindow::CreateUndCheckModbus()
+{
+    uint16_t hd110;
+
+    if(ctx == nullptr)
+        ctx = modbus_new_tcp(setupWidget->plcIpVal->text().toLatin1().data(), 502);
+    if(!countProc->isModbusConnect && modbus_connect(ctx) == -1){
+        Log::Instance()->writeWarn("PLC连接失败");
+        modbus_free(ctx);
+        ctx = nullptr;
+        return;
+    }
+    countProc->isModbusConnect = true;
+    QMutexLocker locker(&mutexModbus);
+    if(modbus_read_registers(ctx, 41198, 1, &hd110) == -1){
+        countProc->isModbusConnect = false;
+        Log::Instance()->writeWarn("PLC失去连接");
+    }
 }

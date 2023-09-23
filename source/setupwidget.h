@@ -89,7 +89,7 @@ public:
     QLabel *expoTimeLabel;
     QDoubleSpinBox *expoTimeVal;
     QLabel *plcIpLabel;
-    DigitUnitFrame *plcIpVal;
+    QLineEdit *plcIpVal;
     QLabel *rtQtyAddrLabel;
     QSpinBox *rtQtyAddrVal;
     QLabel *aQtyAddrLabel;

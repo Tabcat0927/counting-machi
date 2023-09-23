@@ -42,8 +42,8 @@ RESOURCES += \
 
 INCLUDEPATH += $$PWD/../include \
                $$PWD/../include/control \
-               $$PWD/../include/item
-
+               $$PWD/../include/item \
+               $$PWD/../include/modbus
 
 
 TARGET = CountGrain
@@ -65,6 +65,7 @@ win32 : contains(QT_ARCH, i386){
         LIBS += $$PWD/../lib/release/BlobAnalysisPro.lib
         LIBS += $$PWD/../lib/release/CountGrain.lib
         LIBS += $$PWD/../lib/release/Preprocess.lib
+        LIBS += $$PWD/../lib/release/modbus.lib
     }
 }
 

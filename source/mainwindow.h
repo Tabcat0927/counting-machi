@@ -13,12 +13,13 @@
 #include <QThread>
 #include <QSettings>
 #include <QDir>
+#include <QMutex>
 
 #include "xvlog.h"
 #include "xvlogwidget.h"
 #include "countingprocess.h"
 #include "CountGrain.h"
-
+#include "modbus.h"
 
 class MainWindow : public QMainWindow
 {
@@ -68,6 +69,7 @@ public slots:
     void SlotStudy(QVector<XVRegion>);
     void Write2SysSettingFile(const QString&);
     void SlotCountChanged(int, int, int, int);
+    void CreateUndCheckModbus();
 
 };
 #endif // MAINWINDOW_H

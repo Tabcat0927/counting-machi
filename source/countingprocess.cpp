@@ -1,7 +1,9 @@
 ﻿#include "countingprocess.h"
 
-CountingProcess::CountingProcess(MainWidget *mw, SetupWidget *sw, QObject *parent) :
-                 QObject(parent), mw(mw), sw(sw)
+extern modbus_t *ctx;
+extern QMutex   mutexModbus;
+
+CountingProcess::CountingProcess(MainWidget *mw, SetupWidget *sw) : mw(mw), sw(sw)
 {
     grainCnt = 0;
     oneBottleNum = mw->aBtlQtyFrame->value();
@@ -18,10 +20,12 @@ CountingProcess::CountingProcess(MainWidget *mw, SetupWidget *sw, QObject *paren
     isCameraConnect = false;
     isCountStop = true;
     beginStudy = false;
+    isModbusConnect = false;
 
     oneBottleNum = mw->aBtlQtyFrame->value();
     for(int i = 0; i != 8; ++i) tubeCnt[i] = 0;
     for(int i = 0; i != 9; ++i) tubeEdge[i] = 1640 / 8 * i;
+
 //    下面俩会导致QObject::startTimer: Timers cannot be started from another thread
 //    不知道为啥，放到mainwindow里，信号和槽不在一个类内可以，后面再研究
 //    connect(this, &CountingProcess::SignalShowImage, this, &CountingProcess::SlotShowImage);
@@ -34,7 +38,7 @@ void CountingProcess::Count()
 {
     timerSecond.start();
     timerMinute.start();
-    while (!isCountStop){    
+    while (!isCountStop){
         QDir imageDir = QDir("111-1");
         QStringList fileName = imageDir.entryList(QDir::Files);
         int cnt = fileName.count();
@@ -44,6 +48,7 @@ void CountingProcess::Count()
             XVImage tiled_image;
             XVSplitRegionToBlobsOut blobs;
 
+            timerRun.start();
             wid = image.width();
             hei = image.height();
             CreateXVImage(wid, hei, image.bits(), &_imageUp);
@@ -245,6 +250,10 @@ void CountingProcess::DealwithBlobs(XVSplitRegionToBlobsOut &blobs)
                 ++filledCnt;
             }
         }
+        int run_time = sw->opRunTimeVal->value();
+        int time = timerMinute.elapsed();
+        if(run_time > time)
+            Sleep(run_time - time);
         if(timerSecond.elapsed() >= 1000){
             cntSpeed = 0;
             timerSecond.start();
@@ -290,32 +299,32 @@ void CountingProcess::CountUndCommunication(XVRegion &reg)
 
 void CountingProcess::CommunicateWithPLC()
 {
-//    if(mt->modbus_state == true && mt->isModbusMdu == false && mt->isModbusMain == false)
-//    {
-//        mt->isModbusCount = true;
-//        modbus_write_registers(mt->modbus, insertCoordXAddr + n_untop, 1, &row[n_untop]);
-//        modbus_write_registers(mt->modbus, insertCoordYAddr + n_untop, 1, &column[n_untop]);
-//        modbus_write_registers(mt->modbus, insertCoordYAddr + n_untop + 1, 20 - n_untop, &clear[n_untop]);
-//        modbus_write_registers(mt->modbus, insertCoordXAddr + n_untop + 1, 20 - n_untop, &clear[n_untop]);
-//        modbus_write_register(mt->modbus, 3, n_untop + 1);
-//        modbus_write_bit(mt->modbus, 1000, 1);
-//        modbus_write_register(mt->modbus, currentNumAddr, grainCnt);
-//        mt->isModbusCount = false;
-//        if(isBottleFull) modbus_write_bit(mt->modbus, fullSignalAddr, isBottleFull);
-//        if(isFlaw) modbus_write_bit(mt->modbus, flawSignalAddr, isFlaw);
-//        if(isDoubleRemove) modbus_write_bit(mt->modbus, 330, isDoubleRemove);
-//        uint16_t d62[1];
-//        modbus_read_registers(mt->modbus,62,1,&d62[0]);
-//        bottleSpeed = (int)d62[0];
-//        runtime = timer.elapsed();
-//        if(setRuntimeValue > runtime){
-//          Sleep(setRuntimeValue - runtime);
-//        }
-//        isFlaw = false;
-//        isBottleFull = false;
-//        isDoubleRemove =false;
-//        mt->isModbusCount = false;
-//    }
+    QMutexLocker locker(&mutexModbus);
+    if(!isModbusConnect) return;
+    int coor_x = sw->coorXAddrVal->value();
+    int coor_y = sw->coorYAddrVal->value();
+    int cur_num = sw->rtQtyAddrVal->value();
+    int full = sw->fullAddrVal->value();
+    int flaw = sw->flawAddrVal->value();
+//    modbus_write_registers(ctx, coor_x + n_untop, 1, &row[n_untop]);
+//    modbus_write_registers(ctx, coor_y + n_untop, 1, &column[n_untop]);
+//    modbus_write_registers(ctx, coor_x + n_untop + 1, 20 - n_untop, &clear[n_untop]);
+//    modbus_write_registers(ctx, coor_y + n_untop + 1, 20 - n_untop, &clear[n_untop]);
+//    modbus_write_register(ctx, 3, n_untop + 1);
+    modbus_write_bit(ctx, 1000, 1);
+    modbus_write_register(ctx, cur_num, grainCnt);
+
+    if(isBottleFull) modbus_write_bit(ctx, full, isBottleFull);
+    if(isFlaw) modbus_write_bit(ctx, flaw, isFlaw);
+    if(isDoubleRemove) modbus_write_bit(ctx, 330, isDoubleRemove);
+    //为什么装瓶速度要从PLC读取？
+    uint16_t d62;
+    modbus_read_registers(ctx, 62, 1, &d62);
+    fillBottleSpeed = (int)d62;
+
+    isFlaw = false;
+    isBottleFull = false;
+    isDoubleRemove =false;
 }
 
 void CountingProcess::HandleAbnormal(int area, int rad)
@@ -545,3 +554,4 @@ void CountingProcess::SlotStudy()
     mw->ctrlStudy->setChecked(false);
     beginStudy = false;
 }
+

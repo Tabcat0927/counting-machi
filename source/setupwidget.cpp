@@ -230,7 +230,7 @@ void SetupWidget::CameraParaWidget()
     QHBoxLayout *layout7 = new QHBoxLayout();
 
     plcIpLabel = new QLabel("PLC IP");
-    plcIpVal = new DigitUnitFrame(QString(), true, 0, 10000);
+    plcIpVal = new QLineEdit();
     layout1->addWidget(plcIpLabel);
     layout1->addWidget(plcIpVal);
 
@@ -634,7 +634,7 @@ void SetupWidget::ReadSettingFile(const QString &filename)
     lineFreqVal->setValue(setting.value("line_frequency").toInt());
     gainVal->setValue(setting.value("gain").toInt());
     expoTimeVal->setValue(setting.value("exposure_time").toInt());
-    plcIpVal->setValue(setting.value("plc_ip").toInt());
+    plcIpVal->setText(setting.value("plc_ip").toString());
     rtQtyAddrVal->setValue(setting.value("rt_quantity").toInt());
     aQtyAddrVal->setValue(setting.value("one_bottle_quantity").toInt());
     coorXAddrVal->setValue(setting.value("coordinate_x").toInt());
@@ -693,7 +693,7 @@ void SetupWidget::Write2SettingFile(const QString &filename)
     setting.setValue("line_frequency", lineFreqVal->value());
     setting.setValue("gain", gainVal->value());
     setting.setValue("exposure_time", expoTimeVal->value());
-    setting.setValue("plc_ip", plcIpVal->value());
+    setting.setValue("plc_ip", plcIpVal->text());
     setting.setValue("rt_quantity", rtQtyAddrVal->value());
     setting.setValue("one_bottle_quantity", aQtyAddrVal->value());
     setting.setValue("coordinate_x", coorXAddrVal->value());
