@@ -31,9 +31,15 @@ void MainWidget::CreateUi()
     curRecipeVal = new QLabel();
     curRecipe->setFont(_fontYahei15);
     curRecipeVal->setFont(_fontYahei15);
+    testMode = new QComboBox();
+    QStringList mode;
+    mode << "Normal" << "Test";
+    testMode->addItems(mode);
+    testMode->setCurrentIndex(1);
     QHBoxLayout *hlayout = new QHBoxLayout();
     hlayout->addWidget(curRecipe);
     hlayout->addWidget(curRecipeVal, 1);
+    hlayout->addWidget(testMode);
 
     QVBoxLayout *rightLayout = new QVBoxLayout();
 

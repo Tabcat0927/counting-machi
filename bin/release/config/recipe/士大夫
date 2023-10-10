@@ -7,7 +7,7 @@ shaker3=0
 
 [identify%20parameter]
 threshold_min=0
-threshold_max=0
+threshold_max=50
 preprocess_index=0
 operator_size=0
 area_min=0

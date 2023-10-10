@@ -70,7 +70,7 @@ public:
     DigitUnitFrame *shaker3Val;
 
     bool        isStudy;
-
+    QComboBox   *testMode;
 
 private:
     QFont       _fontYahei15;

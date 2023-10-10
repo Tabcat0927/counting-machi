@@ -30,11 +30,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(countProc, &CountingProcess::SignalShowImage, this, &MainWindow::SlotShowImage);
     connect(countProc, &CountingProcess::SignalStudy, this, &MainWindow::SlotStudy);
     connect(countProc, &CountingProcess::SignalCountChanged, this, &MainWindow::SlotCountChanged);
-
+    //check modbus
     QTimer *timer = new QTimer(this);
     ctx = nullptr;
     connect(timer, &QTimer::timeout, this, &MainWindow::CreateUndCheckModbus);
-    timer->start(10000);
+    timer->start(3000);
 }
 
 MainWindow::~MainWindow()
@@ -122,11 +122,17 @@ void MainWindow::runProgToggled(bool checked)
         runProg->setText("停止运行");
         countProc->isCountStop = false;
         countThread.start(QThread::HighestPriority);
+        if(mainWidget->testMode->currentIndex() == 0){
+            countProc->camera->AcquireImages();
+        }
     }
     else{
         runProg->setIcon(QIcon(":/icon/ico/project/start.png"));
         runProg->setText("开始运行");
         countProc->isCountStop = true;
+        if(mainWidget->testMode->currentIndex() == 0){
+            countProc->camera->StopAcquireImage();
+        }
         countThread.quit();
         countThread.wait();
     }

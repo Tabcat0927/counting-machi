@@ -20,6 +20,7 @@
 #include "mainwidget.h"
 #include "xvlogwidget.h"
 #include "modbus.h"
+#include "cameraobject.h"
 
 
 using namespace XVL;
@@ -29,6 +30,7 @@ class CountingProcess : public QObject
     Q_OBJECT
 public:
     explicit CountingProcess(MainWidget *mw, SetupWidget *sw);
+    ~CountingProcess();
 
     void Sleep(int);
     int GetXVRegionArea(XVRegion&);
@@ -62,6 +64,8 @@ public:
     QElapsedTimer timerRun;
     QVector<XVRegion> studyRegion;
 
+    CameraObject  *camera;
+
 public slots:
     void Count();
     void SlotShowImage(QImage&);
@@ -93,7 +97,7 @@ private:
     void DrawMainWindowImage();
     XVImage CropXVImage(XVImage&);
     bool MirrorXVImage(XVImage&, XVImage*);
-    bool TileXVImage(XVImage&, XVImage&, XVImage*);
+    void TileXVImage(XVImage&, XVImage&, XVImage*);
     XVRegion CreateRectXVRegion(int, int);
     void CountUndCommunication(XVRegion&);
     void CommunicateWithPLC();

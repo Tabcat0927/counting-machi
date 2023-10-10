@@ -21,6 +21,7 @@ CountingProcess::CountingProcess(MainWidget *mw, SetupWidget *sw) : mw(mw), sw(s
     isCountStop = true;
     beginStudy = false;
     isModbusConnect = false;
+    camera = new CameraObject();
 
     oneBottleNum = mw->aBtlQtyFrame->value();
     for(int i = 0; i != 8; ++i) tubeCnt[i] = 0;
@@ -31,40 +32,61 @@ CountingProcess::CountingProcess(MainWidget *mw, SetupWidget *sw) : mw(mw), sw(s
 //    connect(this, &CountingProcess::SignalShowImage, this, &CountingProcess::SlotShowImage);
 //    connect(this, &CountingProcess::SignalStudy, this, &CountingProcess::SlotStudy);
 
+}
 
+CountingProcess::~CountingProcess()
+{
+    camera->deleteLater();
 }
 
 void CountingProcess::Count()
 {
+    qDebug() << QThread::currentThreadId();
     timerSecond.start();
     timerMinute.start();
     while (!isCountStop){
-        QDir imageDir = QDir("111-1");
-        QStringList fileName = imageDir.entryList(QDir::Files);
-        int cnt = fileName.count();
-        for(int i = 0; i != cnt; ++i){
-            QImage image("111-1/" + fileName.at(i));
-            XVImage mirrord_image;
-            XVImage tiled_image;
-            XVSplitRegionToBlobsOut blobs;
-
-            timerRun.start();
+        timerRun.start();
+        XVImage mirrored_image;
+        XVImage tiled_image;
+        XVSplitRegionToBlobsOut blobs;
+        if(mw->testMode->currentIndex() == 0){
+            CFrameInfo frame;
+            if(camera->frameQueue.get(frame, 50)){
+                wid = frame.m_nWidth;
+                hei = frame.m_nHeight;
+                CreateXVImage(wid, hei, frame.m_pImageBuf, &_imageUp);
+                free(frame.m_pImageBuf);
+            }
+            else{
+                Sleep(2);
+                continue;
+            }
+        }
+        if(mw->testMode->currentIndex() == 1){
+            static int image_cnt = 0;
+            QDir imageDir = QDir("111-1");
+            QStringList fileName = imageDir.entryList(QDir::Files);
+            int image_num = fileName.count();
+            QImage image("111-1/" + fileName.at(image_cnt));
             wid = image.width();
             hei = image.height();
             CreateXVImage(wid, hei, image.bits(), &_imageUp);
-            MirrorXVImage(_imageUp, &mirrord_image);
-            if(_imageDown.width != wid || _imageDown.height != hei){
-                CreateBlankXVImage(wid, hei, &_imageDown);
-            }
-            TileXVImage(mirrord_image, _imageDown, &tiled_image);
-            ProcessTiledImage(tiled_image, &blobs);
-            if(blobs.outRegions.size() > 0){
-                DrawMainWindowImage();
-                DealwithBlobs(blobs);
-            }
-            else free(_imageUp.data);
-            Sleep(5);
+            ++image_cnt;
+            if(image_cnt == image_num) image_cnt = 0;
+            Sleep(5);//为什么不暂停，连续运行时内存会猛涨？
         }
+        MirrorXVImage(_imageUp, &mirrored_image);
+        if(_imageDown.width != wid || _imageDown.height != hei){
+            CreateBlankXVImage(wid, hei, &_imageDown);
+        }
+        TileXVImage(mirrored_image, _imageDown, &tiled_image);
+        ProcessTiledImage(tiled_image, &blobs);
+        if(blobs.outRegions.size() > 0){
+            DrawMainWindowImage();
+            DealwithBlobs(blobs);
+        }
+        else free(_imageUp.data);
+        Sleep(10);
     }
 }
 
@@ -151,9 +173,9 @@ void CountingProcess::PaintXVRegion(XVRegion &region, XVImage &image, int val)
 
     if(XVSetImagePixels(set_in, set_out) == 0){
         free(image.data);
-        XVImage image = set_out.outImage;
-        CopyXVImage(image, &_imageDown);
-        free(image.data);
+        XVImage out_image = set_out.outImage;
+        CopyXVImage(out_image, &_imageDown);
+        free(out_image.data);
     }
 }
 
@@ -217,6 +239,7 @@ void CountingProcess::ProcessTiledImage(XVImage &tiled_image, XVSplitRegionToBlo
 void CountingProcess::DealwithBlobs(XVSplitRegionToBlobsOut &blobs)
 {
     int n_region = blobs.outRegions.size();
+    bool is_top_intersection = false;
 
     for(int i = 0; i != n_region; ++i){
         XVRegion reg = blobs.outRegions.at(i);
@@ -224,6 +247,7 @@ void CountingProcess::DealwithBlobs(XVSplitRegionToBlobsOut &blobs)
 
         if(TestRegionIntersection(reg, rect_reg)){
             PaintXVRegion(reg, _imageDown, 20);
+            is_top_intersection = true;
             continue;
         }
         if(mw->isStudy){
@@ -250,10 +274,6 @@ void CountingProcess::DealwithBlobs(XVSplitRegionToBlobsOut &blobs)
                 ++filledCnt;
             }
         }
-        int run_time = sw->opRunTimeVal->value();
-        int time = timerMinute.elapsed();
-        if(run_time > time)
-            Sleep(run_time - time);
         if(timerSecond.elapsed() >= 1000){
             cntSpeed = 0;
             timerSecond.start();
@@ -263,6 +283,15 @@ void CountingProcess::DealwithBlobs(XVSplitRegionToBlobsOut &blobs)
             timerMinute.start();
         }
     }
+    if(!is_top_intersection){
+        _imageDown.width = 0;
+        free(_imageDown.data);
+    }
+    int run_time = sw->opRunTimeVal->value();
+    int time = timerMinute.elapsed();
+    if(run_time > time)
+        Sleep(run_time - time);
+
 }
 
 void CountingProcess::CountUndCommunication(XVRegion &reg)
@@ -273,11 +302,10 @@ void CountingProcess::CountUndCommunication(XVRegion &reg)
     int area = GetXVRegionArea(reg);
     int rad = GetXVRegionRadius(reg);
 
-//    qDebug() << area << "   area";
-//    qDebug() << rad<< "   rad";
     if(BolbInNormalRange(area,rad)){
         ++grainCnt;
         ++cntSpeed;
+        qDebug() << "grainCnt::::::" << grainCnt;
 
         XVRegionBoundingRectIn bound_in;
         XVRegionBoundingRectOut bound_out;
@@ -446,7 +474,7 @@ bool CountingProcess::MirrorXVImage(XVImage &in, XVImage *out)
     return false;
 }
 
-bool CountingProcess::TileXVImage(XVImage &in1, XVImage &in2, XVImage *out)
+void CountingProcess::TileXVImage(XVImage &in1, XVImage &in2, XVImage *out)
 {
     XVTileImageOffsetIn tile_in;
     XVTileImageOffsetOut tile_out;
@@ -455,11 +483,7 @@ bool CountingProcess::TileXVImage(XVImage &in1, XVImage &in2, XVImage *out)
     if(XVTileImageOffset(tile_in, tile_out) == 0){
         *out = tile_out.outImage;
         free(in1.data);
-        XVRegion rect = CreateRectXVRegion(wid, hei);
-        PaintXVRegion(rect, _imageDown, 255);
-        return true;
     }
-    return false;
 }
 
 XVRegion CountingProcess::CreateRectXVRegion(int width, int height)

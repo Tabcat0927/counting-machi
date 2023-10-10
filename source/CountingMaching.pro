@@ -16,6 +16,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    cameraobject.cpp \
     countingprocess.cpp \
     digitunitframe.cpp \
     loginwidget.cpp \
@@ -25,6 +26,8 @@ SOURCES += \
     setupwidget.cpp
 
 HEADERS += \
+    MessageQue.h \
+    cameraobject.h \
     countingprocess.h \
     digitunitframe.h \
     loginwidget.h \
@@ -44,7 +47,10 @@ INCLUDEPATH += $$PWD/../include \
                $$PWD/../include/control \
                $$PWD/../include/item \
                $$PWD/../include/modbus
-
+               $$PWD/../include/GenICam
+               $$PWD/../include/Infra
+               $$PWD/../include/Media
+               $$PWD/../include/Memory
 
 TARGET = CountGrain
 
@@ -66,6 +72,7 @@ win32 : contains(QT_ARCH, i386){
         LIBS += $$PWD/../lib/release/CountGrain.lib
         LIBS += $$PWD/../lib/release/Preprocess.lib
         LIBS += $$PWD/../lib/release/modbus.lib
+        LIBS += $$PWD/../lib/release/MVSDKmd.lib
     }
 }
 
