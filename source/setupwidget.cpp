@@ -22,8 +22,6 @@ SetupWidget::SetupWidget(MainWidget *mw, QWidget *parent) :
     connect(btnSave, &QPushButton::clicked, this, &SetupWidget::SlotRecipeSave);
     connect(btnDelete, &QPushButton::clicked, this, &SetupWidget::SlotRecipeDel);
     connect(recipeList, &QListWidget::currentTextChanged, this, &SetupWidget::SlotSelectRecipe);
-
-
 }
 
 void SetupWidget::CreateUi()
